@@ -16,6 +16,8 @@ public class StockServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println("oi");
     }
 }
 
@@ -41,6 +43,7 @@ class StockRequestHandler extends Thread {
                 }
 
                 System.out.println("Produtos em stock:");
+                System.out.println("ID     NOME");
                 for (String produto : produtosEmStock) {
                     System.out.println(produto);
                 }

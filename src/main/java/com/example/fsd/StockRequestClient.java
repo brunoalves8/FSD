@@ -69,7 +69,6 @@ public class StockRequestClient {
                 System.out.println("Resposta recebida: " + response);
                 if (response.startsWith("STOCK_RESPONSE")) {
                     System.out.println("Informação de stocks:");
-                    escrever("Conectado ao servidor com sucesso");
                 } else {
                     System.out.println(response);
 

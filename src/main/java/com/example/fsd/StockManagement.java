@@ -18,10 +18,11 @@ public class StockManagement {
             for (CSVRecord record : records) {
                 String id = record.get("ID");
                 String nome = record.get("Nome");
+                String qtd = record.get("Quantidade");
                 int quantidade = Integer.parseInt(record.get("Quantidade"));
 
                 if (quantidade > 0) {
-                    produtos.add(id+" "+nome);
+                    produtos.add(id+"   "+nome+" -> QTD:"+qtd);
                 }
             }
         } catch (Exception e) {
