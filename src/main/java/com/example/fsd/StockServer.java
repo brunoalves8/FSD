@@ -1,9 +1,10 @@
 package com.example.fsd;
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 public class StockServer {
-    private static final int PORT = 8080;
+    private static final int PORT = 8888;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -32,9 +33,18 @@ class StockRequestHandler extends Thread {
             String request = in.readLine();
 
             if ("STOCK_REQUEST".equals(request)) {
-                // Aqui, estamos enviando uma resposta mock, mas você pode buscar a informação real de stocks
-                String stockInfo = "ProdutoA: 10, ProdutoB: 5, ProdutoC: 20";
-                out.println("STOCK_RESPONSE " + stockInfo);
+
+                String filePath = "stock88.csv";
+                List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
+                for (int i = 0; i < 100; i++) {
+                    System.out.println();
+                }
+
+                System.out.println("Produtos em stock:");
+                for (String produto : produtosEmStock) {
+                    System.out.println(produto);
+                }
+
             }
 
         } catch (IOException e) {

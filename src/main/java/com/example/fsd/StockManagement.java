@@ -1,40 +1,35 @@
 package com.example.fsd;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 
+import java.io.*;
 import java.util.*;
 
-public class ClientConnection {
-    private static Hashtable<String, IPInfo> clientIPs = new Hashtable<String, IPInfo>();
-    private static int cont = 0;
-    public static Vector<String> getStock(String IPAddress) {
+public class StockManagement {
 
-        long actualTime = new Date().getTime();
-        cont = cont+1;
+    public static List<String> getAllStockProductsList(String filePath) {
+        List<String> produtos = new ArrayList<>();
 
-        System.out.println("cont = "+ cont);
+        try (Reader in = new FileReader(filePath)) {
+            Iterable<CSVRecord> records = CSVFormat.DEFAULT
+                    .withFirstRecordAsHeader() // Assume que a primeira linha é o cabeçalho
+                    .parse(in);
 
-        //Assume-se que o IP e valido!!!!!
-        synchronized(this) {
-            if (clientIPs.containsKey(IPAddress)) {
-                IPInfo newIp = clientIPs.get(IPAddress);
-                newIp.setLastSeen(actualTime);
+            for (CSVRecord record : records) {
+                String id = record.get("ID");
+                String nome = record.get("Nome");
+                int quantidade = Integer.parseInt(record.get("Quantidade"));
+
+                if (quantidade > 0) {
+                    produtos.add(id+" "+nome);
+                }
             }
-            else {
-                IPInfo newIP = new IPInfo(IPAddress, actualTime);
-                clientIPs.put(IPAddress,newIP);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return getStockList();
+
+        return produtos;
     }
 
-    private static Vector<String> getStockList() {
-        Vector<String> result = new Vector<String>();
-        for (Enumeration<IPInfo> e = clientIPs.elements(); e.hasMoreElements(); ) {
-            IPInfo element = e.nextElement();
-            if (!element.timeOutPassed(180*1000)) {
-                result.add(element.getIP());
-            }
-        }
-        return result;
     }
 
-}
