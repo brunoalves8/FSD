@@ -98,6 +98,7 @@ public class Client {
         @Override
         public void run() {
             client.sendStockRequest();
+
         }
     }
 
@@ -168,6 +169,9 @@ public class Client {
         Client client = connection();
         boolean continuar = true;
 
+        /*Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos*/
+
         while (continuar) { // enquanto continuar for verdadeiro, o loop será executado
             client.sendStockRequest(); // Listar estoque antes do menu
 
@@ -194,7 +198,7 @@ public class Client {
                     break;
             }
 
-
+            //timer.cancel(); // Pare o timer quando terminar de executar o programa
 
         }
     }
