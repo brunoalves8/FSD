@@ -16,8 +16,6 @@ public class StockServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        System.out.println("oi");
     }
 }
 
@@ -35,21 +33,14 @@ class StockRequestHandler extends Thread {
             String request = in.readLine();
 
             if ("STOCK_REQUEST".equals(request)) {
-
                 String filePath = "stock88.csv";
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
-                for (int i = 0; i < 100; i++) {
-                    System.out.println();
-                }
 
-                System.out.println("Produtos em stock:");
-                System.out.println("ID     NOME");
+                out.println("STOCK_RESPONSE");  // Start of the response
                 for (String produto : produtosEmStock) {
-                    System.out.println(produto);
+                    out.println(produto);
                 }
-
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -60,5 +51,5 @@ class StockRequestHandler extends Thread {
             }
         }
     }
-}
 
+}

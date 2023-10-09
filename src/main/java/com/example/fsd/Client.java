@@ -2,16 +2,15 @@ package com.example.fsd;
 
 import java.io.*;
 import java.net.*;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class StockRequestClient {
+public class Client {
     private String serverAddress;
     private int port;
 
-    public StockRequestClient(String serverAddress, int port) {
+    public Client(String serverAddress, int port) {
         this.serverAddress = serverAddress;
         this.port = port;
     }
@@ -47,31 +46,33 @@ public class StockRequestClient {
         return scan.nextLine();
     }
 
-    public static StockRequestClient connection() {
+    public static Client connection() {
 
         String endIp = lerString("Endereço IP: ");
         int porta = lerInteiro("Porta Servidor: ");
 
-        StockRequestClient client = new StockRequestClient(endIp, porta);
+        Client client = new Client(endIp, porta);
 
         return client;
     }
     public void sendStockRequest() {
         try (Socket socket = new Socket(serverAddress, port);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())))
-        {
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            System.out.println("Conectado ao servidor com sucesso!");
+
             out.println("STOCK_REQUEST");
             String response;
+
             while ((response = in.readLine()) != null && !response.isEmpty()) {
-                System.out.println("Resposta recebida: " + response);
-                if (response.startsWith("STOCK_RESPONSE")) {
+                if (response.equals("STOCK_RESPONSE")) {
+                    for (int i = 0; i < 100; i++) {
+                        System.out.println();
+                    }
                     System.out.println("Informação de stocks:");
+                    System.out.println("ID     NOME");
                 } else {
                     System.out.println(response);
-
                 }
             }
         } catch (IOException e) {
@@ -79,10 +80,11 @@ public class StockRequestClient {
         }
     }
 
-    static class StockRequestTask extends TimerTask {
-        private StockRequestClient client;
 
-        public StockRequestTask(StockRequestClient client) {
+    static class StockRequestTask extends TimerTask {
+        private Client client;
+
+        public StockRequestTask(Client client) {
             this.client = client;
         }
 
@@ -94,8 +96,8 @@ public class StockRequestClient {
 
 
     public static void  main(String[] args) {
-        StockRequestClient client = connection();
+        Client client = connection();
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 seconds
+        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 10000); // 5000 ms = 5 seconds
     }
 }
