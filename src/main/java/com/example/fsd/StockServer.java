@@ -40,6 +40,17 @@ class StockRequestHandler extends Thread {
                 for (String produto : produtosEmStock) {
                     out.println(produto);
                 }
+            } else if ("STOCK_UPDATE".equals(request)) {
+                String action = in.readLine();
+                String productId = in.readLine();
+                int quantity = Integer.parseInt(in.readLine());
+
+                if ("ADD".equals(action)) {
+                    StockManagement.addProductQuantity("stock88.csv", productId, quantity);
+                } else if ("REMOVE".equals(action)) {
+                    StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
+                }
+                out.println("STOCK_UPDATED");
             }
         } catch (IOException e) {
             e.printStackTrace();

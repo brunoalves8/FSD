@@ -128,84 +128,39 @@ public class Client {
         return numero;
     }
 
-    public static void addProductQuantity(String filePath, String productId, int quantityToAdd) {
-        List<CSVRecord> recordsList = new ArrayList<>();
+    public void updateStock(String action, String productId, int quantity) {
+        try (Socket socket = new Socket(serverAddress, port);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-        try (Reader in = new FileReader(filePath)) {
-            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
-            recordsList.addAll(parser.getRecords());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            out.println("STOCK_UPDATE");
+            out.println(action);  // "ADD" or "REMOVE"
+            out.println(productId);
+            out.println(quantity);
 
-        // Adicionar quantidade baseado no ID do produto
-        List<Map<String, String>> updatedRecordsMap = new ArrayList<>();
-        for (CSVRecord record : recordsList) {
-            Map<String, String> recordMap = record.toMap();
-            if (record.get("ID").equals(productId)) {
-                int currentQuantity = Integer.parseInt(record.get("Quantidade"));
-                int updatedQuantity = currentQuantity + quantityToAdd;
-                recordMap.put("Quantidade", String.valueOf(updatedQuantity));
-            }
-            updatedRecordsMap.add(recordMap);
-        }
+            String response = in.readLine();
 
-// Reescrever o arquivo CSV
-        try (Writer out = new FileWriter(filePath)) {
-            CSVPrinter printer = CSVFormat.DEFAULT.withHeader("ID", "Nome", "Quantidade").print(out);
-            for (Map<String, String> recordMap : updatedRecordsMap) {
-                printer.printRecord(recordMap.values());
+            if ("STOCK_UPDATED".equals(response)) {
+                System.out.println("Stock atualizado com sucesso!");
+            } else {
+                System.out.println("Erro ao atualizar o stock.");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Erro ao comunicar com o servidor: " + e);
         }
     }
 
-    public static void addProduct() {
+    public static void addProduct(Client client) {
         String productID = lerString("Qual o id do produto que pretende consultar?");
         Integer qtd = lerInteiro("Quantas unidades pretende adicionar desse produto?");
-        addProductQuantity("stock88.csv", productID, qtd);
+        client.updateStock("ADD", productID, qtd);
 
     }
 
-
-    public static void removeProductQuantity(String filePath, String productId, int quantityToAdd) {
-        List<CSVRecord> recordsList = new ArrayList<>();
-
-        try (Reader in = new FileReader(filePath)) {
-            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
-            recordsList.addAll(parser.getRecords());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Adicionar quantidade baseado no ID do produto
-        List<Map<String, String>> updatedRecordsMap = new ArrayList<>();
-        for (CSVRecord record : recordsList) {
-            Map<String, String> recordMap = record.toMap();
-            if (record.get("ID").equals(productId)) {
-                int currentQuantity = Integer.parseInt(record.get("Quantidade"));
-                int updatedQuantity = currentQuantity - quantityToAdd;
-                recordMap.put("Quantidade", String.valueOf(updatedQuantity));
-            }
-            updatedRecordsMap.add(recordMap);
-        }
-
-// Reescrever o arquivo CSV
-        try (Writer out = new FileWriter(filePath)) {
-            CSVPrinter printer = CSVFormat.DEFAULT.withHeader("ID", "Nome", "Quantidade").print(out);
-            for (Map<String, String> recordMap : updatedRecordsMap) {
-                printer.printRecord(recordMap.values());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void removeProduct() {
+    public static void removeProduct(Client client) {
         String productID = lerString("Qual o id do produto que pretende consultar?");
         Integer qtd = lerInteiro("Quantas unidades pretende remover desse produto?");
-        removeProductQuantity("stock88.csv", productID, qtd);
+        client.updateStock("REMOVE", productID, qtd);
 
     }
 
@@ -229,10 +184,10 @@ public class Client {
                     new StockRequestTask(client).run(); // Chamando diretamente o método run para executar imediatamente
                     break;
                 case 2:
-                    addProduct();
+                    addProduct(client);
                     break;
                 case 3:
-                    removeProduct();
+                    removeProduct(client);
                     break;
                 case 4:
                     continuar = false; // encerrar o loop
@@ -240,8 +195,7 @@ public class Client {
             }
 
 
-       /* Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 10000); // 5000 ms = 5 seconds*/
+
         }
     }
 }
