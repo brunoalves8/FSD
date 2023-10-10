@@ -29,12 +29,15 @@ class StockRequestHandler extends Thread {
     }
 
     public void run() {
+
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+            System.out.println("Cliente conectado ao servidor no endereço " + socket.getInetAddress() + " na porta " + socket.getPort());
 
             String request = in.readLine();
 
             if ("STOCK_REQUEST".equals(request)) {
+
                 String filePath = "stock88.csv";
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
 
