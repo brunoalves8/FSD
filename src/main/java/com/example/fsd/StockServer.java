@@ -3,12 +3,14 @@ import java.io.*;
 import java.net.*;
 import java.util.List;
 
+import static java.lang.System.out;
+
 public class StockServer {
-    private static final int PORT = 8889;
+    private static final int PORT = 8888;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Servidor iniciado na porta: " + PORT);
+            out.println("Servidor iniciado na porta: " + PORT);
 
             while (true) {
                 new StockRequestHandler(serverSocket.accept()).start();

@@ -62,7 +62,13 @@ public class Client {
         return client;
     }
 
+    private boolean lastRequestSuccessful = false;
+
+    public boolean wasLastRequestSuccessful() {
+        return lastRequestSuccessful;
+    }
     public void sendStockRequest() {
+        lastRequestSuccessful = false; // reset para false antes de cada pedido
         try (Socket socket = new Socket(serverAddress, port);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -82,10 +88,12 @@ public class Client {
                     System.out.println(response);
                 }
             }
+            lastRequestSuccessful = true; // pedido foi bem sucedido
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
         }
     }
+
 
 
     static class StockRequestTask extends TimerTask {
@@ -169,11 +177,17 @@ public class Client {
         Client client = connection();
         boolean continuar = true;
 
+        client.sendStockRequest();
         /*Timer timer = new Timer();
         timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos*/
 
+        if (!client.wasLastRequestSuccessful()) {
+            System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
+            return; // Sai do programa se não puder conectar
+        }
+
         while (continuar) { // enquanto continuar for verdadeiro, o loop será executado
-            client.sendStockRequest(); // Listar estoque antes do menu
+            //client.sendStockRequest(); // Listar estoque antes do menu
 
             String[] opcoesCliente = {
                     "Atualizar lista de stock",
@@ -185,7 +199,7 @@ public class Client {
 
             switch (opcao) {
                 case 1:
-                    new StockRequestTask(client).run(); // Chamando diretamente o método run para executar imediatamente
+                    client.sendStockRequest(); // Chamando diretamente o método run para executar imediatamente
                     break;
                 case 2:
                     addProduct(client);
