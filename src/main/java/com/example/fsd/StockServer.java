@@ -6,7 +6,7 @@ import java.util.List;
 import static java.lang.System.out;
 
 public class StockServer {
-    private static final int PORT = 8888;
+    private static final int PORT = 8889;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
