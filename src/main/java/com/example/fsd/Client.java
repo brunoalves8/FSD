@@ -2,7 +2,6 @@ package com.example.fsd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
@@ -10,8 +9,8 @@ import java.net.*;
 import java.util.*;
 
 public class Client {
-    private String serverAddress;
-    private int port;
+    private final String serverAddress;
+    private final int port;
 
     public Client(String serverAddress, int port) {
         this.serverAddress = serverAddress;
@@ -20,26 +19,26 @@ public class Client {
 
     private static final Scanner scan = new Scanner(System.in);
 
-    public static void escrever(String mensagem) {
+    public static void write(String mensagem) {
         System.out.println(mensagem);
     }
 
-    public static void escreverErro(String mensagem) {
+    public static void writeError(String mensagem) {
         System.err.println(mensagem);
     }
 
-    public static int lerInteiro(String mensagem) {
+    public static int readInteger(String mensagem) {
         Integer numero = null;
         String texto;
 
         do {
-            escrever(mensagem);
+            write(mensagem);
             texto = scan.nextLine();
 
             try {
                 numero = Integer.parseInt(texto);
             } catch (NumberFormatException e) {
-                escreverErro(texto + " não é um número inteiro válido.");
+                writeError(texto + " não é um número inteiro válido.");
             }
 
         } while (numero == null);
@@ -47,28 +46,29 @@ public class Client {
         return numero;
     }
 
-    public static String lerString(String mensagem) {
-        escrever(mensagem);
+    public static String readString(String mensagem) {
+        write(mensagem);
         return scan.nextLine();
     }
 
     public static Client connection() {
 
-        String endIp = lerString("Endereço IP: ");
-        int porta = lerInteiro("Porta Servidor: ");
+        String endIp = readString("Endereço IP: ");
+        int porta = readInteger("Porta Servidor: ");
 
         Client client = new Client(endIp, porta);
 
         return client;
     }
 
-    private boolean lastRequestSuccessful = false;
+    private boolean stateOfConnection = false;
 
-    public boolean wasLastRequestSuccessful() {
-        return lastRequestSuccessful;
+    public boolean wasLastRequestSuccessful()
+    {
+        return stateOfConnection;
     }
     public void sendStockRequest() {
-        lastRequestSuccessful = false; // reset para false antes de cada pedido
+        stateOfConnection = false; // reset para false antes de cada pedido
         try (Socket socket = new Socket(serverAddress, port);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -88,7 +88,7 @@ public class Client {
                     System.out.println(response);
                 }
             }
-            lastRequestSuccessful = true; // pedido foi bem sucedido
+            stateOfConnection = true; // pedido foi bem sucedido
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
         }
@@ -115,21 +115,21 @@ public class Client {
         String texto = "";
 
         do {
-            escrever("\nSelecione uma das seguintes opcões:");
+            write("\nSelecione uma das seguintes opcões:");
             for (int i = 0; i < opcoes.length; i++) {
-                escrever((i + 1) + " - " + opcoes[i]);
+                write((i + 1) + " - " + opcoes[i]);
             }
 
             try {
                 texto = scan.nextLine();
                 numero = Integer.parseInt(texto);
             } catch (NumberFormatException e) {
-                escreverErro(texto + " não é uma opção válida");
+                writeError(texto + " não é uma opção válida");
             }
 
             if (numero == null || numero <= 0 || numero > opcoes.length) {
                 numero = null;
-                escreverErro(texto + " não é uma opção válida");
+                writeError(texto + " não é uma opção válida");
             }
 
         } while (numero == null);
@@ -176,8 +176,8 @@ public class Client {
     public static void addProduct(Client client) {
         boolean validInput = false;
         while (!validInput) {
-            String productID = lerString("Qual o id do produto que pretende consultar?");
-            Integer qtd = lerInteiro("Quantas unidades pretende adicionar desse produto?");
+            String productID = readString("Qual o id do produto que pretende consultar?");
+            Integer qtd = readInteger("Quantas unidades pretende adicionar desse produto?");
 
             // Verificar a existência do ID e a quantidade no CSV
             Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);
@@ -199,8 +199,8 @@ public class Client {
     public static void removeProduct(Client client) {
         boolean validInput = false;
         while (!validInput) {
-            String productID = lerString("Qual o id do produto que pretende consultar?");
-            Integer qtd = lerInteiro("Quantas unidades pretende remover desse produto?");
+            String productID = readString("Qual o id do produto que pretende consultar?");
+            Integer qtd = readInteger("Quantas unidades pretende remover desse produto?");
 
             // Verificar a existência do ID e a quantidade no CSV
             Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);

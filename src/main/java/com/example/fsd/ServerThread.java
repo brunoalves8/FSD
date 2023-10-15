@@ -1,30 +1,16 @@
 package com.example.fsd;
-import java.io.*;
-import java.net.*;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.List;
 
-import static java.lang.System.out;
-
-public class StockServer {
-    private static final int PORT = 8888;
-
-    public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            out.println("Servidor iniciado na porta: " + PORT);
-
-            while (true) {
-                new StockRequestHandler(serverSocket.accept()).start();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-class StockRequestHandler extends Thread {
+public class ServerThread extends Thread{
     private Socket socket;
 
-    public StockRequestHandler(Socket socket) {
+    public ServerThread(Socket socket) {
         this.socket = socket;
     }
 
@@ -67,5 +53,4 @@ class StockRequestHandler extends Thread {
             }
         }
     }
-
 }
