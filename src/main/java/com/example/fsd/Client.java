@@ -159,18 +159,64 @@ public class Client {
         }
     }
 
-    public static void addProduct(Client client) {
-        String productID = lerString("Qual o id do produto que pretende consultar?");
-        Integer qtd = lerInteiro("Quantas unidades pretende adicionar desse produto?");
-        client.updateStock("ADD", productID, qtd);
+    public static Integer getCurrentQuantityFromCSV(String filePath, String productID) {
+        try (Reader in = new FileReader(filePath)) {
+            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
+            for (CSVRecord record : parser) {
+                if (record.get("ID").equals(productID)) {
+                    return Integer.parseInt(record.get("Quantidade"));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null se o ID não for encontrado
+    }
 
+    public static void addProduct(Client client) {
+        boolean validInput = false;
+        while (!validInput) {
+            String productID = lerString("Qual o id do produto que pretende consultar?");
+            Integer qtd = lerInteiro("Quantas unidades pretende adicionar desse produto?");
+
+            // Verificar a existência do ID e a quantidade no CSV
+            Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);
+
+            if (currentQuantity != null) {
+                // Se o ID foi encontrado e a quantidade é válida
+                if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
+                    client.updateStock("ADD", productID, qtd);
+                    validInput = true; // Sai do loop
+                } else {
+                    System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
+                }
+            } else {
+                System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
+            }
+        }
     }
 
     public static void removeProduct(Client client) {
-        String productID = lerString("Qual o id do produto que pretende consultar?");
-        Integer qtd = lerInteiro("Quantas unidades pretende remover desse produto?");
-        client.updateStock("REMOVE", productID, qtd);
+        boolean validInput = false;
+        while (!validInput) {
+            String productID = lerString("Qual o id do produto que pretende consultar?");
+            Integer qtd = lerInteiro("Quantas unidades pretende remover desse produto?");
 
+            // Verificar a existência do ID e a quantidade no CSV
+            Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);
+
+            if (currentQuantity != null) {
+                // Se o ID foi encontrado e há unidades suficientes em stock para remover
+                if (qtd > 0 && currentQuantity >= qtd) {
+                    client.updateStock("REMOVE", productID, qtd);
+                    validInput = true; // Sai do loop
+                } else {
+                    System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
+                }
+            } else {
+                System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
+            }
+        }
     }
 
     public static void main(String[] args) {
