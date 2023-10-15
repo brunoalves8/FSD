@@ -1,10 +1,5 @@
 package com.example.fsd;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.CSVRecord;
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -20,26 +15,26 @@ public class Client {
 
     private static final Scanner scan = new Scanner(System.in);
 
-    public static void escrever(String mensagem) {
+    public static void write(String mensagem) {
         System.out.println(mensagem);
     }
 
-    public static void escreverErro(String mensagem) {
+    public static void writeError(String mensagem) {
         System.err.println(mensagem);
     }
 
-    public static int lerInteiro(String mensagem) {
+    public static int readInteger(String mensagem) {
         Integer numero = null;
         String texto;
 
         do {
-            escrever(mensagem);
+            write(mensagem);
             texto = scan.nextLine();
 
             try {
                 numero = Integer.parseInt(texto);
             } catch (NumberFormatException e) {
-                escreverErro(texto + " não é um número inteiro válido.");
+                writeError(texto + " não é um número inteiro válido.");
             }
 
         } while (numero == null);
@@ -47,22 +42,23 @@ public class Client {
         return numero;
     }
 
-    public static String lerString(String mensagem) {
-        escrever(mensagem);
+    public static String readString(String mensagem) {
+        write(mensagem);
         return scan.nextLine();
     }
 
     public static Client connection() {
 
-        String endIp = lerString("Endereço IP: ");
-        int porta = lerInteiro("Porta Servidor: ");
+
+        String endIp = readString("Endereço IP: ");
+        int porta = readInteger("Porta Servidor: ");
 
         Client client = new Client(endIp, porta);
 
         return client;
     }
 
-    private boolean lastRequestSuccessful = false;
+    private boolean lastRequestSuccessful = false; // serve para verificar se a conexão foi estabelecida ou não
 
     public boolean wasLastRequestSuccessful() {
         return lastRequestSuccessful;
@@ -110,26 +106,26 @@ public class Client {
         }
     }
 
-    public static int lerOpcoesMenusInteiros(String[] opcoes) {
+    public static int readOptionsOfMenu(String[] opcoes) {
         Integer numero = null;
         String texto = "";
 
         do {
-            escrever("\nSelecione uma das seguintes opcões:");
+            write("\nSelecione uma das seguintes opcões:");
             for (int i = 0; i < opcoes.length; i++) {
-                escrever((i + 1) + " - " + opcoes[i]);
+                write((i + 1) + " - " + opcoes[i]);
             }
 
             try {
                 texto = scan.nextLine();
                 numero = Integer.parseInt(texto);
             } catch (NumberFormatException e) {
-                escreverErro(texto + " não é uma opção válida");
+                writeError(texto + " não é uma opção válida");
             }
 
             if (numero == null || numero <= 0 || numero > opcoes.length) {
                 numero = null;
-                escreverErro(texto + " não é uma opção válida");
+                writeError(texto + " não é uma opção válida");
             }
 
         } while (numero == null);
@@ -160,15 +156,15 @@ public class Client {
     }
 
     public static void addProduct(Client client) {
-        String productID = lerString("Qual o id do produto que pretende consultar?");
-        Integer qtd = lerInteiro("Quantas unidades pretende adicionar desse produto?");
+        String productID = readString("Qual o id do produto que pretende consultar?");
+        Integer qtd = readInteger("Quantas unidades pretende adicionar desse produto?");
         client.updateStock("ADD", productID, qtd);
 
     }
 
     public static void removeProduct(Client client) {
-        String productID = lerString("Qual o id do produto que pretende consultar?");
-        Integer qtd = lerInteiro("Quantas unidades pretende remover desse produto?");
+        String productID = readString("Qual o id do produto que pretende consultar?");
+        Integer qtd = readInteger("Quantas unidades pretende remover desse produto?");
         client.updateStock("REMOVE", productID, qtd);
 
     }
@@ -178,8 +174,8 @@ public class Client {
         boolean continuar = true;
 
         client.sendStockRequest();
-        /*Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos*/
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -195,7 +191,7 @@ public class Client {
                     "Remover produto do stock",
                     "Sair"};
 
-            int opcao = lerOpcoesMenusInteiros(opcoesCliente);
+            int opcao = readOptionsOfMenu(opcoesCliente);
 
             switch (opcao) {
                 case 1:
@@ -212,7 +208,7 @@ public class Client {
                     break;
             }
 
-            //timer.cancel(); // Pare o timer quando terminar de executar o programa
+            timer.cancel(); // Pare o timer quando terminar de executar o programa
 
         }
     }
