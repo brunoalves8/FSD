@@ -174,8 +174,8 @@ public class Client {
         boolean continuar = true;
 
         client.sendStockRequest();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
+        //Timer timer = new Timer();
+        //timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -208,7 +208,7 @@ public class Client {
                     break;
             }
 
-            timer.cancel(); // Pare o timer quando terminar de executar o programa
+           // timer.cancel(); // Pare o timer quando terminar de executar o programa
 
         }
     }
