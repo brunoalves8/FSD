@@ -224,8 +224,8 @@ public class Client {
         boolean continuar = true;
 
         client.sendStockRequest();
-        /*Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos*/
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -233,7 +233,6 @@ public class Client {
         }
 
         while (continuar) { // enquanto continuar for verdadeiro, o loop será executado
-            //client.sendStockRequest(); // Listar estoque antes do menu
 
             String[] opcoesCliente = {
                     "Atualizar lista de stock",
@@ -245,7 +244,7 @@ public class Client {
 
             switch (opcao) {
                 case 1:
-                    client.sendStockRequest(); // Chamando diretamente o método run para executar imediatamente
+                    client.sendStockRequest();
                     break;
                 case 2:
                     addProduct(client);
@@ -258,7 +257,7 @@ public class Client {
                     break;
             }
 
-            //timer.cancel(); // Pare o timer quando terminar de executar o programa
+            timer.cancel(); // Para o timer quando terminar de executar o programa
 
         }
     }

@@ -1,11 +1,11 @@
 ID,Nome,Quantidade
-7581,Teclado,8
-2642,Mouse,20
+7581,Teclado,-1
+2642,Mouse,1022
 9472,Monitor,5
-4284,CPU,10
-1094,Cabo HDMI,52
+4284,CPU,1010
+1094,Cabo HDMI,12052
 2023,Colunas de Som,12
 3030,Auscultadores,20
 1234,Camara Web,7
-6987,Rato Gaming,0
-3729,Teclado Mecanico,28
+6987,Rato Gaming,2
+3729,Teclado Mecanico,19
