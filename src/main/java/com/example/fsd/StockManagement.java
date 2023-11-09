@@ -35,6 +35,21 @@ public class StockManagement {
 
         return produtos;
     }
+
+
+    public static Integer getCurrentQuantity(String filePath, String productID) {
+        try (Reader in = new FileReader(filePath)) {
+            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
+            for (CSVRecord record : parser) {
+                if (record.get("ID").equals(productID)) {
+                    return Integer.parseInt(record.get("Quantidade"));//retorna a quantidade do produto encontrado
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null se o ID não for encontrado ou se houver um erro de leitura
+    }
     public static void addProductQuantity(String filePath, String productId, int quantityToAdd) {
         synchronized (fileLock) {
             List<CSVRecord> recordsList = new ArrayList<>();

@@ -36,14 +36,30 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     }
 
     @Override
-    public String stock_update(String id, int qtd) throws RemoteException {
+    public String stock_update(String id, int qtd) throws RemoteException { // a qtd recebe um valor inteiro positivo se for para adicionar,
+        //e recebe um valor inteiro negativo, se for para remover
         try {
+            // Verificar se o produto existe
+            Integer currentQuantity = StockManagement.getCurrentQuantity("stock88.csv",id);
+            if (currentQuantity == null) {
+                return "Produto não encontrado.";
+            }
+
             // Se a quantidade é positiva, adicione ao estoque
             if (qtd > 0) {
+                int newQuantity = currentQuantity + qtd;
+                if (newQuantity > 10000) {
+                    return "Não é possível adicionar mais unidades. Limite máximo atingido (10.000).";
+                }
+
                 StockManagement.addProductQuantity("stock88.csv", id, qtd);
                 return "Quantidade adicionada com sucesso.";
 
             } else if (qtd < 0) { // Se a quantidade é negativa, remova do estoque
+                if (Math.abs(qtd) > currentQuantity) {
+                    return "Não é possível remover mais unidades do que as que o produto possui.";
+                }
+
                 StockManagement.removeProductQuantity("stock88.csv", id, Math.abs(qtd));
                 return "Quantidade removida com sucesso.";
 
@@ -55,5 +71,6 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             return "Erro ao atualizar o stock.";
         }
     }
+
 }
 

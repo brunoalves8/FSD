@@ -12,18 +12,19 @@ public class Server {
     private static final int RMI_PORT = 1099;
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            out.println("Servidor Socket iniciado na porta: " + PORT);
             // Inicie o RMI Registry programaticamente
             LocateRegistry.createRegistry(RMI_PORT);
             System.out.println("RMI Registry iniciado na porta: " + RMI_PORT);
 
-            // Crie uma instância do objeto remoto
+            // Cria uma instância do objeto remoto
             StockServer stockServer = new StockServerImpl();
 
-            // Registre o objeto remoto no RMI Registry
+            // Regista o objeto remoto no RMI Registry
             Registry registry = LocateRegistry.getRegistry(RMI_PORT);
             registry.rebind("StockServer", stockServer);
-            System.out.println("Serviço StockServer registrado.");
-            out.println("Servidor iniciado na porta: " + PORT);
+            System.out.println("Objeto remoto registado.");
+
 
             while (true) {
                 new ServerThread(serverSocket.accept()).start();

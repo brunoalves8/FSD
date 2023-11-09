@@ -14,7 +14,7 @@ public class ClientRMI {
             // Localizar o RMI Registry no servidor
             Registry registry = LocateRegistry.getRegistry(serverAddress, rmiPort);
 
-            // Obter a referência do objeto remoto
+            // PONTO 2: O ClientRMI consegue obter a referência do objeto remoto
             remoteServer = (StockServer) registry.lookup("StockServer");
         } catch (Exception e) {
             e.printStackTrace();
