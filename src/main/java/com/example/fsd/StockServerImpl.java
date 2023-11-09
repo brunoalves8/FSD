@@ -57,6 +57,8 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 }
 
                 StockManagement.addProductQuantity("stock88.csv", id, qtd);
+                String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";
+                notifyClients(notificationMessage);
                 return "Quantidade adicionada com sucesso.";
 
             } else if (qtd < 0) { // Se a quantidade é negativa, remova do estoque
@@ -65,6 +67,8 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 }
 
                 StockManagement.removeProductQuantity("stock88.csv", id, Math.abs(qtd));
+                String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";
+                notifyClients(notificationMessage);
                 return "Quantidade removida com sucesso.";
 
             } else { // Se a quantidade é 0, não faça nada
@@ -87,6 +91,14 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         objectClientMap.remove(clientId);
         System.out.println("Cliente " + clientId +" desconectou-se");
     }
+
+    @Override
+    public void notifyClients(String message) throws RemoteException {
+        for (DirectNotification client : objectClientMap.values()) {
+            client.Stock_updated(message);
+        }
+    }
+
 
 }
 

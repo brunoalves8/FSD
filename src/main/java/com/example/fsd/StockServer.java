@@ -6,4 +6,6 @@ public interface StockServer extends Remote {
     String stock_update(String id, int qtd) throws RemoteException;
     void registerClient(String clientEndId, DirectNotification client) throws RemoteException;
     void unregisterClient(String clientId) throws RemoteException;
+    void notifyClients(String message) throws RemoteException;
+
 }
