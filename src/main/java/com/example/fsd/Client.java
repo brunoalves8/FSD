@@ -6,6 +6,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
 import java.net.*;
+import java.rmi.registry.LocateRegistry;
 import java.util.*;
 
 public class Client {
@@ -57,6 +58,20 @@ public class Client {
         int porta = readInteger("Porta Servidor: ");
 
         Client client = new Client(endIp, porta);
+        try {
+            Socket socket = new Socket(endIp, porta);
+
+            // Obtém o OutputStream do Socket do cliente
+            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
+
+            // Adiciona o PrintWriter do cliente à lista (substitua 'Server' pelo nome da sua classe de servidor)
+            synchronized (Server.socketClients) {
+                Server.socketClients.add(clientPrintWriter);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Erro ao estabelecer a conexão: " + e.getMessage());
+        }
 
         return client;
     }
@@ -186,6 +201,13 @@ public class Client {
                 // Se o ID foi encontrado e a quantidade é válida
                 if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
                     client.updateStock("ADD", productID, qtd);
+                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    try {
+                        StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
+                        stockServer.notifyClients(notificationMessage);
+                    } catch (Exception e) {
+                        System.out.println("Erro ao notificar clientes: " + e.getMessage());
+                    }
                     validInput = true; // Sai do loop
                 } else {
                     System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
@@ -209,6 +231,15 @@ public class Client {
                 // Se o ID foi encontrado e há unidades suficientes em stock para remover
                 if (qtd > 0 && currentQuantity >= qtd) {
                     client.updateStock("REMOVE", productID, qtd);
+
+                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    try {
+                        StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
+                        stockServer.notifyClients(notificationMessage);
+                    } catch (Exception e) {
+                        System.out.println("Erro ao notificar clientes: " + e.getMessage());
+                    }
+
                     validInput = true; // Sai do loop
                 } else {
                     System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
@@ -219,13 +250,13 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Client client = connection();
         boolean continuar = true;
 
         client.sendStockRequest();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
+        //Timer timer = new Timer();
+        //timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -257,8 +288,14 @@ public class Client {
                     break;
             }
 
-            timer.cancel(); // Para o timer quando terminar de executar o programa
+            //timer.cancel(); // Para o timer quando terminar de executar o programa
 
+            //Processo para remover o printwriter
+            Socket socket = new Socket(client.serverAddress, client.port);
+            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
+            synchronized (Server.socketClients) {
+                Server.socketClients.remove(clientPrintWriter);
+            }
         }
     }
 }

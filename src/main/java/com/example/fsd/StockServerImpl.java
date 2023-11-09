@@ -1,17 +1,20 @@
 package com.example.fsd;
 
+import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.fsd.Server.objectClientRMIMap;
+
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
 
-    private Map<String, DirectNotification> objectClientMap;
+
     public StockServerImpl() throws RemoteException {
         super();
-        this.objectClientMap = new HashMap<>();
     }
 
     @Override
@@ -80,23 +83,44 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         }
     }
 
+
     @Override
     public void registerClient(String clientId, DirectNotification client) throws RemoteException {
-        objectClientMap.put(clientId, client);
-        System.out.println("Cliente " + clientId +" registou-se");
+        synchronized (objectClientRMIMap) {
+            objectClientRMIMap.put(clientId, client);
+        }
+        System.out.println("Cliente RMI " + clientId + " registou-se");
     }
-
     @Override
     public void unregisterClient(String clientId) throws RemoteException {
-        objectClientMap.remove(clientId);
-        System.out.println("Cliente " + clientId +" desconectou-se");
+        synchronized (Server.objectClientRMIMap) {
+            Server.objectClientRMIMap.remove(clientId);
+        }
+        System.out.println("Cliente RMI " + clientId + " desconectou-se");
     }
-
     @Override
     public void notifyClients(String message) throws RemoteException {
-        for (DirectNotification client : objectClientMap.values()) {
-            client.Stock_updated(message);
+
+        // Notificar clientes Socket
+        synchronized (Server.socketClients) {
+            for (PrintWriter client : Server.socketClients) {
+                try {
+                    client.println(message);
+                } catch (Exception e) {
+                    // Lide com exceções (por exemplo, cliente desconectado) aqui, se necessário
+                    System.out.println("Erro ao notificar cliente Socket: " + e.getMessage());
+                }
+            }
         }
+        // Notificar clientes RMI
+        synchronized (Server.objectClientRMIMap) {
+            for (DirectNotification client : Server.objectClientRMIMap.values()) {
+                client.Stock_updated(message);
+            }
+        }
+
+
+
     }
 
 

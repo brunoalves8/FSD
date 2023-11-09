@@ -4,12 +4,17 @@ import java.net.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteServer;
+import java.util.*;
 
 import static java.lang.System.out;
 
 public class Server {
     private static final int PORT = 8888;
-    private static final int RMI_PORT = 1099;
+    public static final int RMI_PORT = 1099;
+
+    public static final List<PrintWriter> socketClients = Collections.synchronizedList(new ArrayList<>());
+    public static final Map<String, DirectNotification> objectClientRMIMap = new HashMap<>();
+
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             out.println("Servidor Socket iniciado na porta: " + PORT);
