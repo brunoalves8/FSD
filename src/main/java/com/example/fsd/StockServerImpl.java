@@ -2,12 +2,16 @@ package com.example.fsd;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
 
+    private Map<String, DirectNotification> objectClientMap;
     public StockServerImpl() throws RemoteException {
         super();
+        this.objectClientMap = new HashMap<>();
     }
 
     @Override
@@ -70,6 +74,18 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             e.printStackTrace();
             return "Erro ao atualizar o stock.";
         }
+    }
+
+    @Override
+    public void registerClient(String clientId, DirectNotification client) throws RemoteException {
+        objectClientMap.put(clientId, client);
+        System.out.println("Cliente " + clientId +" registou-se");
+    }
+
+    @Override
+    public void unregisterClient(String clientId) throws RemoteException {
+        objectClientMap.remove(clientId);
+        System.out.println("Cliente " + clientId +" desconectou-se");
     }
 
 }

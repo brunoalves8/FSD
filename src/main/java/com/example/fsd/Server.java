@@ -23,7 +23,7 @@ public class Server {
             // Regista o objeto remoto no RMI Registry
             Registry registry = LocateRegistry.getRegistry(RMI_PORT);
             registry.rebind("StockServer", stockServer);
-            System.out.println("Objeto remoto registado.");
+            //System.out.println("Objeto remoto registado.");
 
 
             while (true) {
