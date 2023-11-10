@@ -58,6 +58,20 @@ public class Client {
         int porta = readInteger("Porta Servidor: ");
 
         Client client = new Client(endIp, porta);
+        try {
+            Socket socket = new Socket(endIp, porta);
+
+            // Obtém o OutputStream do Socket do cliente
+            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
+
+            // Adiciona o PrintWriter do cliente à lista (substitua 'Server' pelo nome da sua classe de servidor)
+            synchronized (Server.socketClients) {
+                Server.socketClients.add(clientPrintWriter);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Erro ao estabelecer a conexão: " + e.getMessage());
+        }
 
         return client;
     }
@@ -275,6 +289,13 @@ public class Client {
             }
 
             //timer.cancel(); // Para o timer quando terminar de executar o programa
+
+            //Processo para remover o printwriter
+            Socket socket = new Socket(client.serverAddress, client.port);
+            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
+            synchronized (Server.socketClients) {
+                Server.socketClients.remove(clientPrintWriter);
+            }
         }
     }
 }

@@ -100,6 +100,18 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     }
     @Override
     public void notifyClients(String message) throws RemoteException {
+
+        // Notificar clientes Socket
+        synchronized (Server.socketClients) {
+            for (PrintWriter client : Server.socketClients) {
+                try {
+                    client.println(message);
+                } catch (Exception e) {
+                    // Lide com exceções (por exemplo, cliente desconectado) aqui, se necessário
+                    System.out.println("Erro ao notificar cliente Socket: " + e.getMessage());
+                }
+            }
+        }
         // Notificar clientes RMI
         synchronized (Server.objectClientRMIMap) {
             for (DirectNotification client : Server.objectClientRMIMap.values()) {
@@ -113,4 +125,3 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
 
 
 }
-

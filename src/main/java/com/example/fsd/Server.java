@@ -11,6 +11,8 @@ import static java.lang.System.out;
 public class Server {
     private static final int PORT = 8888;
     public static final int RMI_PORT = 1099;
+
+    public static final List<PrintWriter> socketClients = Collections.synchronizedList(new ArrayList<>());
     public static final Map<String, DirectNotification> objectClientRMIMap = new HashMap<>();
 
     public static void main(String[] args) {
