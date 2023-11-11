@@ -1,6 +1,5 @@
 package com.example.fsd;
 
-import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
@@ -91,15 +90,30 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         }
     }
 
-    public void notifyClients(String message) throws RemoteException {
-        // Resto do código...
+    @Override
+    public void unsubscribe(DirectNotification client) throws RemoteException {
         synchronized (objectClientRMIMap) {
-            for (Map.Entry<String, DirectNotification> entry : objectClientRMIMap.entrySet()) {
+            // Encontre a chave do cliente baseada em seu valor e remova-a do mapa
+            objectClientRMIMap.values().remove(client);
+        }
+        System.out.println("Cliente desinscrito com sucesso.");
+    }
+
+    @Override
+    public void notifyClients(String message) {
+        synchronized (objectClientRMIMap) {
+            Iterator<Map.Entry<String, DirectNotification>> iterator = objectClientRMIMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, DirectNotification> entry = iterator.next();
                 try {
-                    entry.getValue().Stock_updated(message);
+                    boolean acknowledged = entry.getValue().Stock_updated(message);
+                    if (!acknowledged) {
+                        // Log de falha de confirmação, tente novamente ou tome uma ação apropriada
+                        System.out.println("Cliente " + entry.getKey() + " não confirmou o recebimento da mensagem.");
+                    }
                 } catch (RemoteException e) {
-                    System.out.println("Erro ao notificar o cliente " + entry.getKey() + ": " + e.getMessage());
-                    // Considerar a remoção do cliente da lista se a notificação falhar
+                    System.out.println("Não foi possível notificar o cliente " + entry.getKey() + "; removendo-o da lista de notificações.");
+                    iterator.remove(); // Remove o cliente que não pode ser notificado
                 }
             }
         }

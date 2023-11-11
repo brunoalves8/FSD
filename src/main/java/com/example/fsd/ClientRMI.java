@@ -46,27 +46,6 @@ public class ClientRMI {
 
     }
 
-    public static ClientRMI connection() {
-
-        String endIp = readString("Endereço IP: ");
-        int porta = readInteger("Porta Servidor: ");
-
-        ClientRMI client = new ClientRMI(endIp, porta);
-        try {
-            DirectNotification clientImpl = new DirectNotificationImpl(); // Sua implementação existente
-            DirectNotification stub = (DirectNotification) UnicastRemoteObject.exportObject(clientImpl, 0);
-
-            // Conectar ao servidor RMI e inscrever-se
-            Registry registry = LocateRegistry.getRegistry(RMI_PORT);
-            StockServer server = (StockServer) registry.lookup("StockServer");
-            server.subscribe(stub);
-        } catch (Exception e) {
-            System.err.println("Cliente RMI exceção: " + e.toString());
-            e.printStackTrace();
-        }
-
-        return client;
-    }
 
     public  String addProductRMI(String productId, int quantity) {
         try {
@@ -84,9 +63,57 @@ public class ClientRMI {
         }
     }
 
+    public static ClientRMI connection() {
 
+        String endIp = readString("Endereço IP: ");
+        int porta = readInteger("Porta Servidor: ");
+
+        ClientRMI client = new ClientRMI(endIp, porta);
+
+        client.registerForNotifications(endIp);
+
+        return client;
+    }
+
+    public void registerForNotifications(String serverAddress) {
+        try {
+            Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
+            server.subscribe(notificationStub);
+            System.out.println("Registado para notificações no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
+        }
+    }
+
+    public void unregisterForNotifications(String serverAddress) {
+        try {
+            Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
+            server.subscribe(notificationStub);
+            System.out.println("Desregistado para notificações no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se desregistrar para notificações: " + e.getMessage());
+        }
+    }
+    public void closeClient(String serverAddress) {
+        try {
+            if (clientStub != null) { // 'clientStub' é a referência ao objeto remoto do cliente
+                Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+                StockServer server = (StockServer) registry.lookup("StockServer");
+                server.unsubscribe(clientStub);
+                UnicastRemoteObject.unexportObject(clientStub, true);
+                System.out.println("Desregistado do servidor e limpeza concluída.");
+            }
+        } catch (Exception e) {
+            System.err.println("Erro durante o fechamento do cliente: " + e.getMessage());
+        }
+    }
     public static void main(String[] args) {
         ClientRMI rmiClient = connection();
+
 
         boolean continuar = true;
 
@@ -128,7 +155,6 @@ public class ClientRMI {
                     continuar = false; // encerrar o loop
                     break;
             }
-
 
         }
     }
