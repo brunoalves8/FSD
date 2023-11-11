@@ -1,6 +1,7 @@
 package com.example.fsd;
 
 import java.io.PrintWriter;
+import java.net.Socket;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.fsd.Server.clientSocketsMap;
 import static com.example.fsd.Server.objectClientRMIMap;
 
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
@@ -85,12 +87,20 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
 
 
     @Override
-    public void registerClient(String clientId, DirectNotification client) throws RemoteException {
+    public void registerClientRMI(String clientId, DirectNotification client) throws RemoteException {
         synchronized (objectClientRMIMap) {
             objectClientRMIMap.put(clientId, client);
         }
         System.out.println("Cliente RMI " + clientId + " registou-se");
     }
+
+    @Override
+    public void registerClientSocket(Socket clientSocket, DirectNotification client) throws RemoteException {
+        synchronized (clientSocketsMap) {
+            clientSocketsMap.put(clientSocket, client);
+        }
+    }
+
     @Override
     public void unregisterClient(String clientId) throws RemoteException {
         synchronized (Server.objectClientRMIMap) {
@@ -103,6 +113,12 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         // Notificar clientes RMI
         synchronized (Server.objectClientRMIMap) {
             for (DirectNotification client : Server.objectClientRMIMap.values()) {
+                client.Stock_updated(message);
+            }
+        }
+        // Notificar clientes Socket
+        synchronized (clientSocketsMap) {
+            for (DirectNotification client : Server.clientSocketsMap.values()) {
                 client.Stock_updated(message);
             }
         }

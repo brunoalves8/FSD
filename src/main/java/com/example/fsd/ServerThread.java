@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 
 public class ServerThread extends Thread{
@@ -42,6 +43,14 @@ public class ServerThread extends Thread{
                     StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
                 }
                 out.println("STOCK_UPDATED");
+            }
+        } catch (SocketException e) {
+            // Ignora a exceção SocketException ao cliente fechar abruptamente a conexão
+            System.out.println("Cliente desconectado abruptamente.");
+            try {
+                Thread.sleep(5000); // aguarda 5 segundos antes de tentar reconectar
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
             }
         } catch (IOException e) {
             e.printStackTrace();
