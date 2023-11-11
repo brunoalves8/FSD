@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.UUID;
 
 import static com.example.fsd.Client.*;
+import static com.example.fsd.Server.RMI_PORT;
 
 public class ClientRMI {
     private static StockServer remoteServer;
@@ -52,26 +53,21 @@ public class ClientRMI {
 
         ClientRMI client = new ClientRMI(endIp, porta);
         try {
-            remoteServer.registerClient(client.clientId, client.clientStub);
-        } catch (RemoteException e) {
-            System.err.println("Erro ao conectar ao servidor: \n\n" + e);
+            DirectNotification clientImpl = new DirectNotificationImpl(); // Sua implementação existente
+            DirectNotification stub = (DirectNotification) UnicastRemoteObject.exportObject(clientImpl, 0);
+
+            // Conectar ao servidor RMI e inscrever-se
+            Registry registry = LocateRegistry.getRegistry(RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            server.subscribe(stub);
+        } catch (Exception e) {
+            System.err.println("Cliente RMI exceção: " + e.toString());
+            e.printStackTrace();
         }
 
         return client;
     }
 
-    public void close() {
-        // Remove o cliente do servidor ao desconectar
-        try {
-            // Remove o cliente do servidor ao desconectar
-            remoteServer.unregisterClient(clientId);
-
-            // Desvincula o stub do cliente
-            UnicastRemoteObject.unexportObject(clientStub, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
     public  String addProductRMI(String productId, int quantity) {
         try {
             return remoteServer.stock_update(productId, quantity);
@@ -88,21 +84,7 @@ public class ClientRMI {
         }
     }
 
-    public void registerOnServer(String clientId, DirectNotification client) {
-        try {
-            remoteServer.registerClient(clientId, client);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public void unregisterFromServer(String clientId) {
-        try {
-            remoteServer.unregisterClient(clientId);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
     public static void main(String[] args) {
         ClientRMI rmiClient = connection();
 
@@ -149,7 +131,6 @@ public class ClientRMI {
 
 
         }
-        rmiClient.close();
     }
 
 }

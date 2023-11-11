@@ -3,10 +3,7 @@ package com.example.fsd;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.example.fsd.Server.objectClientRMIMap;
 
@@ -85,30 +82,27 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
 
 
     @Override
-    public void registerClient(String clientId, DirectNotification client) throws RemoteException {
+    public void subscribe(DirectNotification client) throws RemoteException {
         synchronized (objectClientRMIMap) {
+            // Adicione a referência do cliente a uma lista ou mapa para futuras notificações
+            String clientId = UUID.randomUUID().toString(); // Ou obtenha o ID do cliente de outra maneira
             objectClientRMIMap.put(clientId, client);
+            System.out.println("Cliente " + clientId + " inscrito para atualizações.");
         }
-        System.out.println("Cliente RMI " + clientId + " registou-se");
     }
-    @Override
-    public void unregisterClient(String clientId) throws RemoteException {
-        synchronized (Server.objectClientRMIMap) {
-            Server.objectClientRMIMap.remove(clientId);
-        }
-        System.out.println("Cliente RMI " + clientId + " desconectou-se");
-    }
-    @Override
+
     public void notifyClients(String message) throws RemoteException {
-        // Notificar clientes RMI
-        synchronized (Server.objectClientRMIMap) {
-            for (DirectNotification client : Server.objectClientRMIMap.values()) {
-                client.Stock_updated(message);
+        // Resto do código...
+        synchronized (objectClientRMIMap) {
+            for (Map.Entry<String, DirectNotification> entry : objectClientRMIMap.entrySet()) {
+                try {
+                    entry.getValue().Stock_updated(message);
+                } catch (RemoteException e) {
+                    System.out.println("Erro ao notificar o cliente " + entry.getKey() + ": " + e.getMessage());
+                    // Considerar a remoção do cliente da lista se a notificação falhar
+                }
             }
         }
-
-
-
     }
 
 
