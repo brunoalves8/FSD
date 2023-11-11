@@ -6,12 +6,16 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
 import java.net.*;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.*;
 
 public class Client {
     private final String serverAddress;
     private final int port;
+
+    private Socket socket;
 
     public Client(String serverAddress, int port) {
         this.serverAddress = serverAddress;
@@ -52,28 +56,33 @@ public class Client {
         return scan.nextLine();
     }
 
-    public static Client connection() {
 
+    private static Client login(){
         String endIp = readString("Endereço IP: ");
         int porta = readInteger("Porta Servidor: ");
 
         Client client = new Client(endIp, porta);
+        return client;
+    }
+    private void connect() {
+
         try {
-            Socket socket = new Socket(endIp, porta);
-
-            // Obtém o OutputStream do Socket do cliente
-            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
-
-            // Adiciona o PrintWriter do cliente à lista (substitua 'Server' pelo nome da sua classe de servidor)
-            synchronized (Server.socketClients) {
-                Server.socketClients.add(clientPrintWriter);
-            }
-
+            socket = new Socket(serverAddress, port);
+            stateOfConnection = true;
         } catch (IOException e) {
-            System.out.println("Erro ao estabelecer a conexão: " + e.getMessage());
+            System.err.println("Erro ao conectar ao servidor \n\n" + e);
         }
 
-        return client;
+    }
+
+    private void disconnect() {
+        try {
+            if (socket != null && socket.isConnected()) {
+                socket.close();
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao fechar a conexão: " + e);
+        }
     }
 
     private boolean stateOfConnection = false;
@@ -83,9 +92,9 @@ public class Client {
         return stateOfConnection;
     }
     public void sendStockRequest() {
+        connect();
         stateOfConnection = false; // reset para false antes de cada pedido
-        try (Socket socket = new Socket(serverAddress, port);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
 
@@ -109,21 +118,6 @@ public class Client {
         }
     }
 
-
-
-    static class StockRequestTask extends TimerTask {
-        private Client client;
-
-        public StockRequestTask(Client client) {
-            this.client = client;
-        }
-
-        @Override
-        public void run() {
-            client.sendStockRequest();
-
-        }
-    }
 
     public static int lerOpcoesMenusInteiros(String[] opcoes) {
         Integer numero = null;
@@ -153,8 +147,8 @@ public class Client {
     }
 
     public void updateStock(String action, String productId, int quantity) {
-        try (Socket socket = new Socket(serverAddress, port);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        connect();
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             out.println("STOCK_UPDATE");
@@ -188,7 +182,7 @@ public class Client {
         return null; // Retorna null se o ID não for encontrado
     }
 
-    public static void addProduct(Client client) {
+    public static void addProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
         while (!validInput) {
             String productID = readString("Qual o id do produto que pretende consultar?");
@@ -202,12 +196,8 @@ public class Client {
                 if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
                     client.updateStock("ADD", productID, qtd);
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-                    try {
-                        StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                        stockServer.notifyClients(notificationMessage);
-                    } catch (Exception e) {
-                        System.out.println("Erro ao notificar clientes: " + e.getMessage());
-                    }
+                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
+                    stockServer.notifyClients(notificationMessage);
                     validInput = true; // Sai do loop
                 } else {
                     System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
@@ -218,7 +208,7 @@ public class Client {
         }
     }
 
-    public static void removeProduct(Client client) {
+    public static void removeProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
         while (!validInput) {
             String productID = readString("Qual o id do produto que pretende consultar?");
@@ -233,12 +223,8 @@ public class Client {
                     client.updateStock("REMOVE", productID, qtd);
 
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-                    try {
-                        StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                        stockServer.notifyClients(notificationMessage);
-                    } catch (Exception e) {
-                        System.out.println("Erro ao notificar clientes: " + e.getMessage());
-                    }
+                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
+                    stockServer.notifyClients(notificationMessage);
 
                     validInput = true; // Sai do loop
                 } else {
@@ -250,8 +236,9 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        Client client = connection();
+    public static void main(String[] args) throws IOException, NotBoundException {
+        Client client = login();
+        client.connect();
         boolean continuar = true;
 
         client.sendStockRequest();
@@ -287,15 +274,8 @@ public class Client {
                     continuar = false; // encerrar o loop
                     break;
             }
-
+            client.disconnect();
             //timer.cancel(); // Para o timer quando terminar de executar o programa
-
-            //Processo para remover o printwriter
-            Socket socket = new Socket(client.serverAddress, client.port);
-            PrintWriter clientPrintWriter = new PrintWriter(socket.getOutputStream(), true);
-            synchronized (Server.socketClients) {
-                Server.socketClients.remove(clientPrintWriter);
-            }
         }
     }
 }

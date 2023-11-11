@@ -54,7 +54,7 @@ public class ClientRMI {
         try {
             remoteServer.registerClient(client.clientId, client.clientStub);
         } catch (RemoteException e) {
-            throw new RuntimeException(e);
+            System.err.println("Erro ao conectar ao servidor: \n\n" + e);
         }
 
         return client;
