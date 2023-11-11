@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Timer;
 import java.util.UUID;
 
 import static com.example.fsd.Client.*;
@@ -51,7 +52,7 @@ public class ClientRMI {
 
         ClientRMI client = new ClientRMI(endIp, porta);
         try {
-            remoteServer.registerClientRMI(client.clientId, client.clientStub);
+            remoteServer.registerClient(client.clientId, client.clientStub);
         } catch (RemoteException e) {
             System.err.println("Erro ao conectar ao servidor: \n\n" + e);
         }
@@ -89,12 +90,19 @@ public class ClientRMI {
 
     public void registerOnServer(String clientId, DirectNotification client) {
         try {
-            remoteServer.registerClientRMI(clientId, client);
+            remoteServer.registerClient(clientId, client);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
+    public void unregisterFromServer(String clientId) {
+        try {
+            remoteServer.unregisterClient(clientId);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String[] args) {
         ClientRMI rmiClient = connection();
 

@@ -9,15 +9,9 @@ import java.net.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-
 public class Client {
-
-    private static StockServer remoteServer;
-    private DirectNotification clientStub;
     private final String serverAddress;
     private final int port;
 
@@ -26,21 +20,6 @@ public class Client {
     public Client(String serverAddress, int port) {
         this.serverAddress = serverAddress;
         this.port = port;
-        int RMI_PORT = 1099;
-        try {
-            // PONTO Localizar o RMI Registry no servidor
-            Registry registry = LocateRegistry.getRegistry(serverAddress, RMI_PORT);
-
-            // PONTO 2: O ClientRMI consegue obter a referência do objeto remoto
-            remoteServer = (StockServer) registry.lookup("StockServer");
-            // Gera um stub para o objeto remoto do cliente (stub é um proxy local)
-            clientStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
-            //clientStub permite que o servidor chame métodos no objeto remoto do cliente quando necessário.
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
     }
 
     private static final Scanner scan = new Scanner(System.in);
@@ -89,7 +68,6 @@ public class Client {
 
         try {
             socket = new Socket(serverAddress, port);
-            remoteServer.registerClientSocket(socket, clientStub);
             stateOfConnection = true;
         } catch (IOException e) {
             System.err.println("Erro ao conectar ao servidor \n\n" + e);

@@ -12,7 +12,6 @@ public class Server {
     private static final int PORT = 8888;
     public static final int RMI_PORT = 1099;
     public static final Map<String, DirectNotification> objectClientRMIMap = new HashMap<>();
-    public static final Map<Socket, DirectNotification> clientSocketsMap = new HashMap<>();
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
