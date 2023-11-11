@@ -5,10 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.List;
 
-public class ServerThread extends Thread {
+public class ServerThread extends Thread{
     private Socket socket;
 
     public ServerThread(Socket socket) {
@@ -44,9 +43,6 @@ public class ServerThread extends Thread {
                 }
                 out.println("STOCK_UPDATED");
             }
-        } catch (SocketException e) {
-            // Cliente desconectado
-            System.out.println("Cliente desconectado: " + e.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

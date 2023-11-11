@@ -70,7 +70,6 @@ public class Client {
             socket = new Socket(serverAddress, port);
             stateOfConnection = true;
         } catch (IOException e) {
-            stateOfConnection = false;
             System.err.println("Erro ao conectar ao servidor \n\n" + e);
         }
 
@@ -183,7 +182,7 @@ public class Client {
         return null; // Retorna null se o ID não for encontrado
     }
 
-    public static void addProduct(Client client) throws RemoteException {
+    public static void addProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
         while (!validInput) {
             String productID = readString("Qual o id do produto que pretende consultar?");
@@ -197,13 +196,7 @@ public class Client {
                 if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
                     client.updateStock("ADD", productID, qtd);
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-
-                    StockServer stockServer;
-                    try {
-                        stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    } catch (NotBoundException e) {
-                        throw new RuntimeException(e);
-                    }
+                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
                     stockServer.notifyClients(notificationMessage);
                     validInput = true; // Sai do loop
                 } else {
@@ -281,6 +274,7 @@ public class Client {
                     continuar = false; // encerrar o loop
                     break;
             }
+            client.disconnect();
             //timer.cancel(); // Para o timer quando terminar de executar o programa
         }
     }
