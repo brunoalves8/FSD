@@ -73,7 +73,7 @@ public class Client {
             System.err.println("Erro ao conectar ao servidor \n\n" + e);
         }
 
-    }
+    }//
 
     private void disconnect() {
         try {
