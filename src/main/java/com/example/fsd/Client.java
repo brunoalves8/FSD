@@ -271,9 +271,10 @@ public class Client {
                     break;
                 case 4:
                     continuar = false; // encerrar o loop
+                    client.disconnect();
                     break;
             }
-            client.disconnect();
+
             //timer.cancel(); // Para o timer quando terminar de executar o programa
         }
     }

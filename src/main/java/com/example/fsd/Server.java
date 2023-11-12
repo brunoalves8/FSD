@@ -13,7 +13,6 @@ import static java.lang.System.out;
 public class Server {
     private static final int PORT = 5000;
     public static final int RMI_PORT = 1099;
-    private ConcurrentHashMap<String, DirectNotification> objectClientRMIMap = new ConcurrentHashMap<>();
     public static void main(String[] args) {
         StockServerImpl stockServerImpl = null;
         try {
