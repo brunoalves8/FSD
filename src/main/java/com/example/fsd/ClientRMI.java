@@ -11,11 +11,16 @@ import static com.example.fsd.Client.*;
 import static com.example.fsd.Server.RMI_PORT;
 
 public class ClientRMI {
+
+    private volatile String lastUpdateId; // Último ID de atualização recebido
     private static StockServer remoteServer;
     private DirectNotification clientStub;
     private String clientId;
+    private String endIpFornc;
+
     public ClientRMI(String serverAddress, int rmiPort) {
         try {
+            endIpFornc=serverAddress;
             // PONTO Localizar o RMI Registry no servidor
             Registry registry = LocateRegistry.getRegistry(serverAddress, rmiPort);
 
@@ -70,14 +75,14 @@ public class ClientRMI {
 
         ClientRMI client = new ClientRMI(endIp, porta);
 
-        client.registerForNotifications(endIp);
+        client.registerForNotifications();
 
         return client;
     }
 
-    public void registerForNotifications(String serverAddress) {
+    public void registerForNotifications() {
         try {
-            Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
             StockServer server = (StockServer) registry.lookup("StockServer");
             DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
             server.subscribe(notificationStub);
@@ -87,9 +92,9 @@ public class ClientRMI {
         }
     }
 
-    public void unregisterForNotifications(String serverAddress) {
+    public void unregisterForNotifications() {
         try {
-            Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
             StockServer server = (StockServer) registry.lookup("StockServer");
             DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
             server.subscribe(notificationStub);
@@ -98,10 +103,10 @@ public class ClientRMI {
             System.err.println("Erro ao se desregistrar para notificações: " + e.getMessage());
         }
     }
-    public void closeClient(String serverAddress) {
+    public void closeClient() {
         try {
             if (clientStub != null) { // 'clientStub' é a referência ao objeto remoto do cliente
-                Registry registry = LocateRegistry.getRegistry(serverAddress, Server.RMI_PORT);
+                Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
                 StockServer server = (StockServer) registry.lookup("StockServer");
                 server.unsubscribe(clientStub);
                 UnicastRemoteObject.unexportObject(clientStub, true);
@@ -153,8 +158,11 @@ public class ClientRMI {
                     break;
                 case 4:
                     continuar = false; // encerrar o loop
+                    rmiClient.unregisterForNotifications();
+                    rmiClient.closeClient();
                     break;
             }
+
 
         }
     }

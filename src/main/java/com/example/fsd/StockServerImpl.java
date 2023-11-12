@@ -3,12 +3,11 @@ package com.example.fsd;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-
-import static com.example.fsd.Server.objectClientRMIMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
 
-
+    private final ConcurrentHashMap<String, DirectNotification> objectClientRMIMap = new ConcurrentHashMap<>();
     public StockServerImpl() throws RemoteException {
         super();
     }
@@ -102,21 +101,19 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     @Override
     public void notifyClients(String message) {
         synchronized (objectClientRMIMap) {
-            Iterator<Map.Entry<String, DirectNotification>> iterator = objectClientRMIMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String, DirectNotification> entry = iterator.next();
-                try {
-                    boolean acknowledged = entry.getValue().Stock_updated(message);
-                    if (!acknowledged) {
-                        // Log de falha de confirmação, tente novamente ou tome uma ação apropriada
-                        System.out.println("Cliente " + entry.getKey() + " não confirmou o recebimento da mensagem.");
-                    }
-                } catch (RemoteException e) {
-                    System.out.println("Não foi possível notificar o cliente " + entry.getKey() + "; removendo-o da lista de notificações.");
-                    iterator.remove(); // Remove o cliente que não pode ser notificado
-                }
+        for (DirectNotification client : objectClientRMIMap.values()) {
+            try {
+                client.Stock_updated(message);
+            } catch (RemoteException e) {
+                System.out.println("Não foi possivel notificar os clientes");
             }
+
+          }
         }
+    }
+
+    public void registerClient(String clientID, DirectNotification clientStub) {
+        objectClientRMIMap.put(clientID, clientStub);
     }
 
 

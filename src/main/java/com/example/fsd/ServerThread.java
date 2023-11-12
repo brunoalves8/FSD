@@ -9,11 +9,11 @@ import java.util.List;
 
 public class ServerThread extends Thread{
     private Socket socket;
-
-    public ServerThread(Socket socket) {
+    private final StockServerImpl stockServerImpl; // Referência ao servidor RMI
+    public ServerThread(Socket socket, StockServerImpl stockServerImpl) {
         this.socket = socket;
+        this.stockServerImpl = stockServerImpl; // Inicie a referência ao servidor RMI
     }
-
     public void run() {
 
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -43,6 +43,7 @@ public class ServerThread extends Thread{
                 }
                 out.println("STOCK_UPDATED");
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
