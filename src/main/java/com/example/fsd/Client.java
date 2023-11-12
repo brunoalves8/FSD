@@ -206,7 +206,7 @@ public class Client {
                 System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
         }
-    }
+    }//
 
     public static void removeProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
