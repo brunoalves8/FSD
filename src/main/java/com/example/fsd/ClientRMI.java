@@ -12,7 +12,6 @@ import static com.example.fsd.Server.RMI_PORT;
 
 public class ClientRMI {
 
-    private volatile String lastUpdateId; // Último ID de atualização recebido
     private static StockServer remoteServer;
     private DirectNotification clientStub;
     private String clientId;
@@ -21,10 +20,10 @@ public class ClientRMI {
     public ClientRMI(String serverAddress, int rmiPort) {
         try {
             endIpFornc=serverAddress;
-            // PONTO Localizar o RMI Registry no servidor
+            // Localizar o RMI Registry no servidor
             Registry registry = LocateRegistry.getRegistry(serverAddress, rmiPort);
 
-            // PONTO 2: O ClientRMI consegue obter a referência do objeto remoto
+            //obter a referência do objeto remoto
             remoteServer = (StockServer) registry.lookup("StockServer");
 
             // Gera um id para o objeto remoto do cliente
@@ -110,7 +109,7 @@ public class ClientRMI {
                 StockServer server = (StockServer) registry.lookup("StockServer");
                 server.unsubscribe(clientStub);
                 UnicastRemoteObject.unexportObject(clientStub, true);
-                System.out.println("Desregistado do servidor e limpeza concluída.");
+                System.out.println("Client desresgistado do servidor.");
             }
         } catch (Exception e) {
             System.err.println("Erro durante o fechamento do cliente: " + e.getMessage());
@@ -129,7 +128,7 @@ public class ClientRMI {
 
             String[] opcoesCliente = {
                     "Atualizar lista de stock",
-                    "Acrescentar produto ao stock",
+                    "Adicionar produto ao stock",
                     "Remover produto do stock",
                     "Sair"};
 
@@ -138,7 +137,7 @@ public class ClientRMI {
             switch (opcao) {
                 case 1:
                     try {
-                        String stockInfo = rmiClient.requestStock();
+                        rmiClient.requestStock();
                     } catch(Exception e) {
                         System.out.println("Erro ao obter dados via RMI: " + e.getMessage());
                     }

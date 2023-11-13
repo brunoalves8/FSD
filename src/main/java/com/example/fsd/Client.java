@@ -73,7 +73,7 @@ public class Client {
             System.err.println("Erro ao conectar ao servidor \n\n" + e);
         }
 
-    }//
+    }
 
     private void disconnect() {
         try {
@@ -185,7 +185,7 @@ public class Client {
     public static void addProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
         while (!validInput) {
-            String productID = readString("Qual o id do produto que pretende consultar?");
+            String productID = readString("Qual o id do produto que pretende adicionar?");
             Integer qtd = readInteger("Quantas unidades pretende adicionar desse produto?");
 
             // Verificar a existência do ID e a quantidade no CSV
@@ -201,19 +201,23 @@ public class Client {
                     stockServer.notifyClients(notificationMessage);
 
                     validInput = true; // Sai do loop
-                } else {
+                } else if(qtd<0) {
+                    System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
+
+                }else{
                     System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
+
                 }
             } else {
                 System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
         }
-    }//
+    }
 
     public static void removeProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
         while (!validInput) {
-            String productID = readString("Qual o id do produto que pretende consultar?");
+            String productID = readString("Qual o id do produto que pretende remover?");
             Integer qtd = readInteger("Quantas unidades pretende remover desse produto?");
 
             // Verificar a existência do ID e a quantidade no CSV
@@ -229,6 +233,9 @@ public class Client {
                     stockServer.notifyClients(notificationMessage);
 
                     validInput = true; // Sai do loop
+                } else if(qtd<0) {
+                    System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
+
                 } else {
                     System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
                 }

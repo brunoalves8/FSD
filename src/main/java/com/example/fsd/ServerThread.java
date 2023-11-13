@@ -12,7 +12,7 @@ public class ServerThread extends Thread{
     private final StockServerImpl stockServerImpl; // Referência ao servidor RMI
     public ServerThread(Socket socket, StockServerImpl stockServerImpl) {
         this.socket = socket;
-        this.stockServerImpl = stockServerImpl; // Inicie a referência ao servidor RMI
+        this.stockServerImpl = stockServerImpl;
     }
     public void run() {
 
@@ -27,7 +27,7 @@ public class ServerThread extends Thread{
                 String filePath = "stock88.csv";
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
 
-                out.println("STOCK_RESPONSE");  // Start of the response
+                out.println("STOCK_RESPONSE");
                 for (String produto : produtosEmStock) {
                     out.println(produto);
                 }

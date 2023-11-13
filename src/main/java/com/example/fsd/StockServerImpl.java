@@ -114,9 +114,5 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         }
     }
 
-    public void registerClient(String clientID, DirectNotification clientStub) {
-        objectClientRMIMap.put(clientID, clientStub);
-    }
-
 
 }
