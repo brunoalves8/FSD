@@ -238,14 +238,27 @@ public class Client {
         }
     }
 
+    static class StockRequestTask extends TimerTask {
+        private Client client;
+
+        public StockRequestTask(Client client) {
+            this.client = client;
+        }
+
+        @Override
+        public void run() {
+            client.sendStockRequest();
+
+        }
+    }
     public static void main(String[] args) throws IOException, NotBoundException {
         Client client = login();
         client.connect();
         boolean continuar = true;
 
         client.sendStockRequest();
-        //Timer timer = new Timer();
-        //timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -256,8 +269,9 @@ public class Client {
 
             String[] opcoesCliente = {
                     "Atualizar lista de stock",
-                    "Acrescentar produto ao stock",
+                    "Adicionar produto ao stock",
                     "Remover produto do stock",
+                    "Parar Timer",
                     "Sair"};
 
             int opcao = lerOpcoesMenusInteiros(opcoesCliente);
@@ -273,12 +287,14 @@ public class Client {
                     removeProduct(client);
                     break;
                 case 4:
+                    timer.cancel();
+                    break;
+                case 5:
                     continuar = false; // encerrar o loop
+                    timer.cancel();
                     client.disconnect();
                     break;
             }
-
-            //timer.cancel(); // Para o timer quando terminar de executar o programa
         }
     }
 }
