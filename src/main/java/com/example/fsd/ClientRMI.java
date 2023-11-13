@@ -25,7 +25,6 @@ public class ClientRMI {
 
             //obter a referência do objeto remoto
             remoteServer = (StockServer) registry.lookup("StockServer");
-
             // Gera um id para o objeto remoto do cliente
             clientId = UUID.randomUUID().toString();
 
