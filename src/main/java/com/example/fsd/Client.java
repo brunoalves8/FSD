@@ -196,9 +196,9 @@ public class Client {
                 if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
                     client.updateStock("ADD", productID, qtd);
                     //Remover as próximas três linhas se for preciso ou adicionar
-                    /*String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
                     StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);*/
+                    stockServer.notifyClients(notificationMessage);
 
                     validInput = true; // Sai do loop
                 } else {
@@ -224,9 +224,9 @@ public class Client {
                 if (qtd > 0 && currentQuantity >= qtd) {
                     client.updateStock("REMOVE", productID, qtd);
                     //Remover as próximas três linhas se for preciso ou adicionar
-                    /*String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
                     StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);*/
+                    stockServer.notifyClients(notificationMessage);
 
                     validInput = true; // Sai do loop
                 } else {

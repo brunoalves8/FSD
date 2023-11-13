@@ -139,7 +139,6 @@ public class ClientRMI {
                 case 1:
                     try {
                         String stockInfo = rmiClient.requestStock();
-                        System.out.println(stockInfo);
                     } catch(Exception e) {
                         System.out.println("Erro ao obter dados via RMI: " + e.getMessage());
                     }

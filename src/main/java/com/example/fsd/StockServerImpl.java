@@ -68,6 +68,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 StockManagement.removeProductQuantity("stock88.csv", id, Math.abs(qtd));
                // String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   Esta linha mostra qual o produto que foi atualizado
                 String notificationMessage = stock_request(); // esta liinha mostra o stock
+                notifyClients(notificationMessage);
                 return "Quantidade removida com sucesso.";
 
             } else { // Se a quantidade é 0, não faça nada
