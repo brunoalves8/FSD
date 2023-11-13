@@ -195,9 +195,11 @@ public class Client {
                 // Se o ID foi encontrado e a quantidade é válida
                 if (qtd > 0 && (currentQuantity + qtd) <= 10000) {
                     client.updateStock("ADD", productID, qtd);
-                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    //Remover as próximas três linhas se for preciso ou adicionar
+                    /*String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
                     StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);
+                    stockServer.notifyClients(notificationMessage);*/
+
                     validInput = true; // Sai do loop
                 } else {
                     System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
@@ -221,9 +223,10 @@ public class Client {
                 // Se o ID foi encontrado e há unidades suficientes em stock para remover
                 if (qtd > 0 && currentQuantity >= qtd) {
                     client.updateStock("REMOVE", productID, qtd);
-                   String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    //Remover as próximas três linhas se for preciso ou adicionar
+                    /*String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
                     StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);
+                    stockServer.notifyClients(notificationMessage);*/
 
                     validInput = true; // Sai do loop
                 } else {
