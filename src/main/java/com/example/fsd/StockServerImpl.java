@@ -35,8 +35,8 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             StringBuilder response = new StringBuilder("Informação de stocks:\nID     NOME\n");
             produtosEmStock.forEach(produto -> response.append(produto).append("\n"));
 
-            String signedMessage = response.toString() + ". ASSINATURA: " + generateSignature(response.toString());
-            System.out.println(response);
+            String signedMessage = response.toString() + "."+ generateSignature(response.toString());
+
             return signedMessage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +83,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 resultMessage = "Quantidade não modificada.";
             }
 
-            String signedMessage = resultMessage + ". ASSINATURA:" + generateSignature(resultMessage);
+            String signedMessage = resultMessage + ".ASSINATURA:" + generateSignature(resultMessage);
             return signedMessage;
 
 
@@ -129,6 +129,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
 
     @Override
     public PublicKey get_pubKey() {
+
         return Server.getPublicKey();
     }
 

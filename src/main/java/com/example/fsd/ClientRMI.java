@@ -5,8 +5,18 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Timer;
 import java.util.UUID;
+
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 import static com.example.fsd.Client.*;
 import static com.example.fsd.Server.RMI_PORT;
@@ -17,6 +27,7 @@ public class ClientRMI {
     private DirectNotification clientStub;
     private String clientId;
     private String endIpFornc;
+
 
     public ClientRMI(String serverAddress, int rmiPort) {
         try {
@@ -53,12 +64,64 @@ public class ClientRMI {
 
     public String requestStock() {
         try {
-            String response = remoteServer.stock_request();
-            System.out.println(response);
-            return response;
+            String signedResponse = remoteServer.stock_request();
+
+            // Separar a mensagem e a assinatura
+            String[] parts = signedResponse.split("\\.");
+            if (parts.length == 2) {
+                String message = parts[0];
+                String signature = parts[1];
+                String pubKeyString = convertPublicKeyToString(remoteServer.get_pubKey());
+
+                // Verificar a assinatura
+                if (verifySignature(message, signature, pubKeyString)) {
+                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
+                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
+                    return signedResponse;
+                } else {
+                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
+                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
+                }
+            } else {
+                System.err.println("Formato inválido da mensagem recebida.");
+                return "Formato inválido da mensagem recebida.";
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return "Erro ao obter dados via RMI: " + e.getMessage();
+        }
+
+    }
+
+
+    private String convertPublicKeyToString(PublicKey publicKey) {
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        return Base64.getEncoder().encodeToString(publicKeyBytes);
+    }
+    private boolean verifySignature(String message, String encodedSignature, String publicKeyString) {
+        try {
+            // Converte a chave pública a partir da sua representação em String
+            byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyString);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+
+            // Inicializa o objeto de assinatura com a chave pública
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(publicKey);
+
+            // Atualiza o objeto de assinatura com os bytes da mensagem
+            signature.update(message.getBytes("UTF-8"));
+
+            // Decodifica a assinatura da representação em String
+            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
+
+            // Verifica a assinatura
+            return !signature.verify(signatureBytes);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
+            return false;
         }
 
     }
