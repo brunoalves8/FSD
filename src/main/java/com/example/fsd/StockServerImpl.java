@@ -2,11 +2,9 @@ package com.example.fsd;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.security.PublicKey;
-import java.security.MessageDigest;
-import java.security.Signature;
 import java.util.Base64;
 import java.util.List;
 
@@ -17,41 +15,28 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         super();
     }
 
+
+    private String generateSignature(String message) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] messageDigest = md.digest(message.getBytes());
+
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(Server.getPrivateKey());
+        signature.update(messageDigest);
+        byte[] digitalSignature = signature.sign();
+
+        return Base64.getEncoder().encodeToString(digitalSignature);
+    }
+
     @Override
     public String stock_request() throws RemoteException {
         try {
             List<String> produtosEmStock = StockManagement.getAllStockProductsList("stock88.csv");
+            StringBuilder response = new StringBuilder("Informação de stocks:\nID     NOME\n");
+            produtosEmStock.forEach(produto -> response.append(produto).append("\n"));
 
-            // Criar um StringBuilder para construir a resposta
-            StringBuilder response = new StringBuilder();
-
-            // Adicionar os cabeçalhos à resposta
-            response.append("Informação de stocks:\n");
-            response.append("ID     NOME\n");
-
-            // Adicionar cada produto à resposta
-            for (String produto : produtosEmStock) {
-                response.append(produto).append("\n");
-            }
-
-            // Obter a mensagem em formato de string
-            String message = response.toString();
-
-            // Criar sumário da mensagem
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] messageDigest = md.digest(message.getBytes());
-
-            // Assinar o sumário
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(Server.getPrivateKey());
-            signature.update(messageDigest);
-            byte[] digitalSignature = signature.sign();
-
-            // Concatenar mensagem e assinatura
-            String signedMessage = message + "." + Base64.getEncoder().encodeToString(digitalSignature);
-
+            String signedMessage = response.toString() + "." + generateSignature(response.toString());
             return signedMessage;
-
         } catch (Exception e) {
             e.printStackTrace();
             return "Erro ao obter informação de stock.";
@@ -66,7 +51,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             // Verificar se o produto existe
             Integer currentQuantity = StockManagement.getCurrentQuantity("stock88.csv",id);
             if (currentQuantity == null) {
-                resultMessage = "Produto não encontrado.";
+                return "Produto não encontrado.";
             }
 
             // Se a quantidade é positiva, adicione ao estoque
@@ -97,22 +82,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 resultMessage = "Quantidade não modificada.";
             }
 
-            //Assinatura da mensagem
-            String message = resultMessage;
-
-            // Criar sumário da mensagem
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] messageDigest = md.digest(message.getBytes());
-
-            // Assinar o sumário
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(Server.getPrivateKey());
-            signature.update(messageDigest);
-            byte[] digitalSignature = signature.sign();
-
-            // Concatenar mensagem e assinatura
-            String signedMessage = message + "." + Base64.getEncoder().encodeToString(digitalSignature);
-
+            String signedMessage = resultMessage + "." + generateSignature(resultMessage);
             return signedMessage;
 
 

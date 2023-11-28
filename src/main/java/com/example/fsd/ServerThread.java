@@ -2,6 +2,7 @@ package com.example.fsd;
 
 import java.io.*;
 import java.net.Socket;
+import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -16,11 +17,15 @@ public class ServerThread extends Thread{
         this.stockServerImpl = stockServerImpl;
     }
 
-    private String signMessage(String message, PrivateKey privateKey) {
+    private String signMessage(String message) {
         try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(message.getBytes());
+            byte[] messageDigest = md.digest();
+
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
-            signature.update(message.getBytes());
+            signature.initSign(Server.getPrivateKey());
+            signature.update(messageDigest);
             byte[] signatureBytes = signature.sign();
             return Base64.getEncoder().encodeToString(signatureBytes);
         } catch (Exception e) {
@@ -28,6 +33,7 @@ public class ServerThread extends Thread{
             return null;
         }
     }
+
 
     private String convertPublicKeyToString(PublicKey publicKey) {
         byte[] publicKeyBytes = publicKey.getEncoded();
@@ -43,7 +49,7 @@ public class ServerThread extends Thread{
             String request = in.readLine();
 
 
-            String response;
+            String response = null;
             String signedResponse;
 
             if ("STOCK_REQUEST".equals(request)) {
@@ -51,8 +57,11 @@ public class ServerThread extends Thread{
                 String filePath = "stock88.csv";
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
 
-                response = String.join("\n", produtosEmStock);
-                signedResponse = signMessage(response, Server.getPrivateKey());
+                for (String produto : produtosEmStock) {
+                    response = String.join("\n", produto);
+                }
+
+                signedResponse = signMessage(response);
 
                 out.println(response + "." + signedResponse);
 
@@ -68,7 +77,7 @@ public class ServerThread extends Thread{
                 }
 
                 response = "STOCK_UPDATED";
-                signedResponse = signMessage(response, Server.getPrivateKey());
+                signedResponse = signMessage(response);
 
                 out.println(response + "." + signedResponse);
 
@@ -87,4 +96,5 @@ public class ServerThread extends Thread{
             }
         }
     }
+
 }

@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.PublicKey;
 import java.util.Timer;
 import java.util.UUID;
 
@@ -91,6 +92,18 @@ public class ClientRMI {
         }
     }
 
+    public void registerForSecureNotifications(PublicKey serverPublicKey, ClientRMI client) {
+        try {
+            SecureDirectNotificationImpl clientNotification = new SecureDirectNotificationImpl(serverPublicKey); // serverPublicKey deve ser obtido de alguma forma
+            Registry registry = LocateRegistry.getRegistry(client.endIpFornc, 1099);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            server.subscribe((DirectNotification) clientNotification);
+            System.out.println("Registado para notificações no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
+        }
+    }
+
     public void unregisterForNotifications() {
         try {
             Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
@@ -115,9 +128,26 @@ public class ClientRMI {
             System.err.println("Erro durante o fechamento do cliente: " + e.getMessage());
         }
     }
+
+    public PublicKey getServerPublicKey() {
+        try {
+            // Obtém a referência do objeto remoto do servidor
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+
+            // Chama o método para obter a chave pública
+            return server.get_pubKey();
+        } catch (Exception e) {
+            System.err.println("Erro ao obter a chave pública do servidor: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static void main(String[] args) {
         ClientRMI rmiClient = connection();
 
+        PublicKey serverPublicKey = rmiClient.getServerPublicKey();
+        rmiClient.registerForSecureNotifications(serverPublicKey,rmiClient);
 
         boolean continuar = true;
 
