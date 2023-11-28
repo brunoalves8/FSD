@@ -9,11 +9,15 @@ import java.net.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 
 public class Client {
     private final String serverAddress;
     private final int port;
+    private PublicKey serverPublicKey;
 
     private Socket socket;
 
@@ -56,6 +60,18 @@ public class Client {
         return scan.nextLine();
     }
 
+    private boolean verifySignature(String message, String encodedSignature, PublicKey publicKey) {
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(publicKey);
+            signature.update(message.getBytes());
+            return signature.verify(Base64.getDecoder().decode(encodedSignature));
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
+            return false;
+        }
+    }
+
 
     private static Client login(){
         String endIp = readString("Endereço IP: ");
@@ -65,16 +81,40 @@ public class Client {
         return client;
     }
     private void connect() {
-
         try {
             socket = new Socket(serverAddress, port);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Enviar comando para obter a chave pública
+            out.println("GET_PUBKEY");
+
+            // Receber a resposta do servidor
+            String response = in.readLine();
+            if (response != null && response.startsWith("PUBLIC_KEY")) {
+                String publicKeyEncoded = response.substring("PUBLIC_KEY ".length());
+                // Aqui você precisaria converter a string codificada da chave pública de volta para um objeto PublicKey
+                serverPublicKey = convertStringToPublicKey(publicKeyEncoded);
+            }
+
             stateOfConnection = true;
         } catch (IOException e) {
-            System.err.println("Erro ao conectar ao servidor \n\n" + e);
+            System.err.println("Erro ao conectar ao servidor: " + e.getMessage());
+            e.printStackTrace();
         }
-
     }
 
+    private PublicKey convertStringToPublicKey(String publicKeyEncoded) {
+        try {
+            byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyEncoded);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     private void disconnect() {
         try {
             if (socket != null && socket.isConnected()) {
@@ -103,11 +143,20 @@ public class Client {
 
             while ((response = in.readLine()) != null && !response.isEmpty()) {
                 if (response.equals("STOCK_RESPONSE")) {
-                    for (int i = 0; i < 10; i++) {
-                        System.out.println();
+                    String[] parts = response.split("\\.", 2);
+                    String message = parts[0];
+                    String signature = parts[1];
+
+                    if (verifySignature(message, signature, serverPublicKey)) {
+                        for (int i = 0; i < 10; i++) {
+                            System.out.println();
+                        }
+                        System.out.println("Informação de stocks:");
+                        System.out.println("ID     NOME");
+                    } else {
+                        System.err.println("Assinatura inválida.");
                     }
-                    System.out.println("Informação de stocks:");
-                    System.out.println("ID     NOME");
+
                 } else {
                     System.out.println(response);
                 }
@@ -158,10 +207,24 @@ public class Client {
 
             String response = in.readLine();
 
-            if ("STOCK_UPDATED".equals(response)) {
-                System.out.println("Stock atualizado com sucesso!");
-            } else {
-                System.out.println("Erro ao atualizar o stock.");
+            if (response != null) {
+                // Separa a mensagem da assinatura
+                String[] parts = response.split("\\.", 2);
+                String message = parts[0];
+                String signature = parts[1];
+
+                if (verifySignature(message, signature, serverPublicKey)) {
+                    // Assinatura verificada
+                    System.out.println("Resposta do servidor: " + message);
+                    if ("STOCK_UPDATED".equals(response)) {
+                        System.out.println("Stock atualizado com sucesso!");
+                    } else {
+                        System.out.println("Erro ao atualizar o stock.");
+                    }
+                } else {
+                    // Assinatura inválida
+                    System.err.println("Assinatura da resposta do servidor inválida.");
+                }
             }
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
@@ -264,8 +327,8 @@ public class Client {
         boolean continuar = true;
 
         client.sendStockRequest();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
+        //Timer timer = new Timer();
+        //timer.scheduleAtFixedRate(new StockRequestTask(client), 0, 5000); // 5000 ms = 5 segundos
 
         if (!client.wasLastRequestSuccessful()) {
             System.out.println("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
@@ -294,11 +357,11 @@ public class Client {
                     removeProduct(client);
                     break;
                 case 4:
-                    timer.cancel();
+                    //timer.cancel();
                     break;
                 case 5:
                     continuar = false; // encerrar o loop
-                    timer.cancel();
+                  //  timer.cancel();
                     client.disconnect();
                     break;
             }

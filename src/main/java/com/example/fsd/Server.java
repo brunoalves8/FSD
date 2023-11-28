@@ -4,22 +4,39 @@ import java.net.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.RemoteServer;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 
 import static java.lang.System.out;
 
 public class Server {
-    private static final int PORT = 5000;
+    private static final int PORT = 8888;
     public static final int RMI_PORT = 1099;
+    private static PrivateKey privateKey;
+    private static PublicKey publicKey;
     public static void main(String[] args) {
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048);
+            KeyPair pair = keyGen.generateKeyPair();
+            privateKey = pair.getPrivate();
+            publicKey = pair.getPublic();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return;
+        }
+
         StockServerImpl stockServerImpl = null;
         try {
             stockServerImpl = new StockServerImpl();
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             out.println("Servidor Socket iniciado na porta: " + PORT);
             // Inicie o RMI Registry programaticamente
@@ -34,6 +51,8 @@ public class Server {
             registry.rebind("StockServer", stockServer);
             //System.out.println("Objeto remoto registado.");
 
+            //out.println("Privada: " + privateKey);
+            //out.println("Publica: " + publicKey);
 
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -42,5 +61,14 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    public static PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public static PrivateKey getPrivateKey() {
+        return privateKey;
     }
 }

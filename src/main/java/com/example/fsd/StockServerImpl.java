@@ -4,6 +4,11 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.security.PublicKey;
+import java.security.MessageDigest;
+import java.security.Signature;
+import java.util.Base64;
+import java.util.List;
 
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
 
@@ -29,7 +34,23 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 response.append(produto).append("\n");
             }
 
-            return response.toString();
+            // Obter a mensagem em formato de string
+            String message = response.toString();
+
+            // Criar sumário da mensagem
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] messageDigest = md.digest(message.getBytes());
+
+            // Assinar o sumário
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(Server.getPrivateKey());
+            signature.update(messageDigest);
+            byte[] digitalSignature = signature.sign();
+
+            // Concatenar mensagem e assinatura
+            String signedMessage = message + "." + Base64.getEncoder().encodeToString(digitalSignature);
+
+            return signedMessage;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,40 +61,61 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     @Override
     public String stock_update(String id, int qtd) throws RemoteException { // a qtd recebe um valor inteiro positivo se for para adicionar,
         //e recebe um valor inteiro negativo, se for para remover
+        String resultMessage;
         try {
             // Verificar se o produto existe
             Integer currentQuantity = StockManagement.getCurrentQuantity("stock88.csv",id);
             if (currentQuantity == null) {
-                return "Produto não encontrado.";
+                resultMessage = "Produto não encontrado.";
             }
 
             // Se a quantidade é positiva, adicione ao estoque
             if (qtd > 0) {
                 int newQuantity = currentQuantity + qtd;
                 if (newQuantity > 10000) {
-                    return "Não é possível adicionar mais unidades. Limite máximo atingido (10.000).";
+                    resultMessage = "Não é possível adicionar mais unidades. Limite máximo atingido (10.000).";
                 }
 
                 StockManagement.addProductQuantity("stock88.csv", id, qtd);
                 // String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   Esta linha mostra qual o produto que foi atualizado
                 String notificationMessage = stock_request(); // esta liinha mostra o stock
                 notifyClients(notificationMessage);
-                return "Quantidade adicionada com sucesso.";
+                resultMessage = "Quantidade adicionada com sucesso.";
 
             } else if (qtd < 0) { // Se a quantidade é negativa, remova do estoque
                 if (Math.abs(qtd) > currentQuantity) {
-                    return "Não é possível remover mais unidades do que as que o produto possui.";
+                    resultMessage = "Não é possível remover mais unidades do que as que o produto possui.";
                 }
 
                 StockManagement.removeProductQuantity("stock88.csv", id, Math.abs(qtd));
-               // String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   Esta linha mostra qual o produto que foi atualizado
-                String notificationMessage = stock_request(); // esta liinha mostra o stock
+                String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
+               // String notificationMessage = stock_request(); // esta linha mostra o stock
                 notifyClients(notificationMessage);
-                return "Quantidade removida com sucesso.";
+                resultMessage = "Quantidade removida com sucesso.";
 
             } else { // Se a quantidade é 0, não faça nada
-                return "Quantidade não modificada.";
+                resultMessage = "Quantidade não modificada.";
             }
+
+            //Assinatura da mensagem
+            String message = resultMessage;
+
+            // Criar sumário da mensagem
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] messageDigest = md.digest(message.getBytes());
+
+            // Assinar o sumário
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(Server.getPrivateKey());
+            signature.update(messageDigest);
+            byte[] digitalSignature = signature.sign();
+
+            // Concatenar mensagem e assinatura
+            String signedMessage = message + "." + Base64.getEncoder().encodeToString(digitalSignature);
+
+            return signedMessage;
+
+
         } catch (Exception e) {
             e.printStackTrace();
             return "Erro ao atualizar o stock.";
@@ -114,5 +156,9 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
         }
     }
 
+    @Override
+    public PublicKey get_pubKey() {
+        return Server.getPublicKey();
+    }
 
 }

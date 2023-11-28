@@ -37,6 +37,19 @@ public class ClientRMI {
         }
     }
 
+    public static ClientRMI connection() {
+
+        String endIp = readString("Endereço IP: ");
+        int porta = readInteger("Porta Servidor: ");
+
+        ClientRMI client = new ClientRMI(endIp, porta);
+
+        client.registerForNotifications();
+
+        return client;
+    }
+
+
     public String requestStock() {
         try {
             String response = remoteServer.stock_request();
@@ -64,18 +77,6 @@ public class ClientRMI {
         } catch (Exception e) {
             return "Erro ao remover produto: " + e.getMessage();
         }
-    }
-
-    public static ClientRMI connection() {
-
-        String endIp = readString("Endereço IP: ");
-        int porta = readInteger("Porta Servidor: ");
-
-        ClientRMI client = new ClientRMI(endIp, porta);
-
-        client.registerForNotifications();
-
-        return client;
     }
 
     public void registerForNotifications() {
