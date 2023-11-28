@@ -97,8 +97,8 @@ public class ClientRMI {
             SecureDirectNotificationImpl clientNotification = new SecureDirectNotificationImpl(serverPublicKey); // serverPublicKey deve ser obtido de alguma forma
             Registry registry = LocateRegistry.getRegistry(client.endIpFornc, 1099);
             StockServer server = (StockServer) registry.lookup("StockServer");
-            server.subscribe((DirectNotification) clientNotification);
-            System.out.println("Registado para notificações no servidor.");
+            server.subscribe((SecureDirectNotification) clientNotification);
+            System.out.println("Registado para notificações seguras no servidor.");
         } catch (Exception e) {
             System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
         }

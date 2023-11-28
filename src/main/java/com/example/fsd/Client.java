@@ -126,29 +126,35 @@ public class Client {
     }
     public void sendStockRequest() {
         connect();
-        stateOfConnection = false; // reset para false antes de cada pedido
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        stateOfConnection=false;
+        try (
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             ) {
 
 
             out.println("STOCK_REQUEST");
             String response;
 
             while ((response = in.readLine()) != null && !response.isEmpty()) {
-                if (response.equals("STOCK_RESPONSE")) {
-                    String[] parts = response.split("\\.", 2);
-                    String message = parts[0];
-                    String signature = parts[1];
+                if (response.startsWith("STOCK_RESPONSE")) {
+                    String[] parts = response.split("\\.");
+                   if(parts.length == 2) {
+                       String message = parts[0];
+                       String signature = parts[1];
 
-                    if (verifySignature(message, signature, serverPublicKey)) {
-                        for (int i = 0; i < 10; i++) {
-                            System.out.println();
-                        }
-                        System.out.println("Informação de stocks:");
-                        System.out.println("ID     NOME");
-                    } else {
-                        System.err.println("Assinatura inválida.");
-                    }
+                       if (verifySignature(message, signature, serverPublicKey)) {
+                           List<String> produtosEmStock = StockManagement.getAllStockProductsList("stock88.csv");
+
+                           StringBuilder response2 = new StringBuilder("Informação de stocks:\nID     NOME\n");
+
+                           produtosEmStock.forEach(produto -> response2.append(produto).append("\n"));
+                       } else {
+                           System.err.println("Assinatura inválida.");
+                       }
+                   }else{
+                       System.out.println("Não foi possivel separar a mensagem da assinatura");
+                   }
 
                 } else {
                     System.out.println(response);

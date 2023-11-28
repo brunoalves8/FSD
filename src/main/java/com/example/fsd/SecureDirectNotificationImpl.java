@@ -39,5 +39,9 @@ public class SecureDirectNotificationImpl extends UnicastRemoteObject implements
     }
 
 
+    @Override
+    public String Stock_updated(String message) throws RemoteException {
+        return null;
+    }
 }
 

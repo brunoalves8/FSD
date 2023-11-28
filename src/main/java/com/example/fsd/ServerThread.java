@@ -63,7 +63,7 @@ public class ServerThread extends Thread{
 
                 signedResponse = signMessage(response);
 
-                out.println(response + "." + signedResponse);
+                out.println("STOCK_RESPONSE" + ": " +response + "." + signedResponse + "\n");
 
             } else if ("STOCK_UPDATE".equals(request)) {
                 String action = in.readLine();

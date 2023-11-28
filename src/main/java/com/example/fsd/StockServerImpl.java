@@ -35,7 +35,8 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             StringBuilder response = new StringBuilder("Informação de stocks:\nID     NOME\n");
             produtosEmStock.forEach(produto -> response.append(produto).append("\n"));
 
-            String signedMessage = response.toString() + "." + generateSignature(response.toString());
+            String signedMessage = response.toString() + ". ASSINATURA: " + generateSignature(response.toString());
+            System.out.println(response);
             return signedMessage;
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,10 +63,10 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 }
 
                 StockManagement.addProductQuantity("stock88.csv", id, qtd);
-                // String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   Esta linha mostra qual o produto que foi atualizado
-                String notificationMessage = stock_request(); // esta liinha mostra o stock
+                 String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
+                // String notificationMessage = stock_request(); // esta liinha mostra o stock
                 notifyClients(notificationMessage);
-                resultMessage = "Quantidade adicionada com sucesso.";
+                resultMessage = "Quantidade adicionada com sucesso!";
 
             } else if (qtd < 0) { // Se a quantidade é negativa, remova do estoque
                 if (Math.abs(qtd) > currentQuantity) {
@@ -76,13 +77,13 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
                // String notificationMessage = stock_request(); // esta linha mostra o stock
                 notifyClients(notificationMessage);
-                resultMessage = "Quantidade removida com sucesso.";
+                resultMessage = "Quantidade removida com sucesso!";
 
             } else { // Se a quantidade é 0, não faça nada
                 resultMessage = "Quantidade não modificada.";
             }
 
-            String signedMessage = resultMessage + "." + generateSignature(resultMessage);
+            String signedMessage = resultMessage + ". ASSINATURA:" + generateSignature(resultMessage);
             return signedMessage;
 
 
