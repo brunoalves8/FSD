@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Base64;
 import java.util.List;
-
+import com.example.fsd.Server;
 public class StockServerImpl extends UnicastRemoteObject implements StockServer {
 
     private final ConcurrentHashMap<String, DirectNotification> objectClientRMIMap = new ConcurrentHashMap<>();
@@ -16,18 +16,6 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     }
 
 
-    private String generateSignature(String message) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] messageDigest = md.digest(message.getBytes());
-
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initSign(Server.getPrivateKey());
-        signature.update(messageDigest);
-        byte[] digitalSignature = signature.sign();
-
-        return Base64.getEncoder().encodeToString(digitalSignature);
-    }
-
     @Override
     public String stock_request() throws RemoteException {
         try {
@@ -35,7 +23,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
             StringBuilder response = new StringBuilder("Informação de stocks:\nID     NOME\n");
             produtosEmStock.forEach(produto -> response.append(produto).append("\n"));
 
-            String signedMessage = response.toString() + "."+ generateSignature(response.toString());
+            String signedMessage = response.toString() + "."+ Server.generateSignature(response.toString());
 
             return signedMessage;
         } catch (Exception e) {
@@ -83,7 +71,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 resultMessage = "Quantidade não modificada.";
             }
 
-            String signedMessage = resultMessage + ".ASSINATURA:" + generateSignature(resultMessage);
+            String signedMessage = resultMessage + ".ASSINATURA:" + Server.generateSignature(resultMessage);
             return signedMessage;
 
 

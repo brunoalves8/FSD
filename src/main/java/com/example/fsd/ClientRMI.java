@@ -21,6 +21,7 @@ import java.util.Base64;
 import static com.example.fsd.Client.*;
 import static com.example.fsd.Server.RMI_PORT;
 
+
 public class ClientRMI {
 
     private static StockServer remoteServer;
@@ -71,10 +72,10 @@ public class ClientRMI {
             if (parts.length == 2) {
                 String message = parts[0];
                 String signature = parts[1];
-                String pubKeyString = convertPublicKeyToString(remoteServer.get_pubKey());
+                PublicKey pubKey = remoteServer.get_pubKey();
 
                 // Verificar a assinatura
-                if (verifySignature(message, signature, pubKeyString)) {
+                if (verifySignature(message, signature, pubKey)) {
                     System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
                     System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
                     return signedResponse;
@@ -98,14 +99,8 @@ public class ClientRMI {
         byte[] publicKeyBytes = publicKey.getEncoded();
         return Base64.getEncoder().encodeToString(publicKeyBytes);
     }
-    private boolean verifySignature(String message, String encodedSignature, String publicKeyString) {
+    private boolean verifySignature(String message, String encodedSignature, PublicKey publicKey) {
         try {
-            // Converte a chave pública a partir da sua representação em String
-            byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyString);
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            PublicKey publicKey = keyFactory.generatePublic(keySpec);
-
             // Inicializa o objeto de assinatura com a chave pública
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
@@ -117,14 +112,15 @@ public class ClientRMI {
             byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
 
             // Verifica a assinatura
-            return !signature.verify(signatureBytes);
+
+            return signature.verify(signatureBytes);
 
         } catch (Exception e) {
             System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
             return false;
         }
-
     }
+
 
 
     public  String addProductRMI(String productId, int quantity) {
