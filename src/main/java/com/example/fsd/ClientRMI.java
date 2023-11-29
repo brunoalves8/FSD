@@ -62,6 +62,32 @@ public class ClientRMI {
         return client;
     }
 
+    private String convertPublicKeyToString(PublicKey publicKey) {
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        return Base64.getEncoder().encodeToString(publicKeyBytes);
+    }
+    private boolean verifySignature(String message, String encodedSignature, PublicKey publicKey) {
+        try {
+            // Inicializa o objeto de assinatura com a chave pública
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(publicKey);
+
+            // Atualiza o objeto de assinatura com os bytes da mensagem
+            signature.update(message.getBytes("UTF-8"));
+
+            // Decodifica a assinatura da representação em String
+            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
+
+            // Verifica a assinatura
+
+            return signature.verify(signatureBytes);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
+            return false;
+        }
+    }
+
 
     public String requestStock() {
         try {
@@ -94,48 +120,65 @@ public class ClientRMI {
 
     }
 
-
-    private String convertPublicKeyToString(PublicKey publicKey) {
-        byte[] publicKeyBytes = publicKey.getEncoded();
-        return Base64.getEncoder().encodeToString(publicKeyBytes);
-    }
-    private boolean verifySignature(String message, String encodedSignature, PublicKey publicKey) {
-        try {
-            // Inicializa o objeto de assinatura com a chave pública
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(publicKey);
-
-            // Atualiza o objeto de assinatura com os bytes da mensagem
-            signature.update(message.getBytes("UTF-8"));
-
-            // Decodifica a assinatura da representação em String
-            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
-
-            // Verifica a assinatura
-
-            return signature.verify(signatureBytes);
-
-        } catch (Exception e) {
-            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
-            return false;
-        }
-    }
-
-
-
     public  String addProductRMI(String productId, int quantity) {
         try {
-            return remoteServer.stock_update(productId, quantity);
-        } catch (Exception e) {
-            return "Erro ao adicionar produto: " + e.getMessage();
-        }
+            String signedResponse = remoteServer.stock_update(productId, quantity);
+
+            // Separar a mensagem e a assinatura
+            String[] parts = signedResponse.split("\\.");
+            if (parts.length == 2) {
+                String message = parts[0];
+                String signature = parts[1];
+                PublicKey pubKey = remoteServer.get_pubKey();
+
+                // Verificar a assinatura
+                if (verifySignature(message, signature, pubKey)) {
+                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
+                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
+                    return signedResponse;
+                } else {
+                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
+                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
+                }
+            } else {
+                System.err.println("Formato inválido da mensagem recebida.");
+                return "Formato inválido da mensagem recebida.";
+            }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return "Erro ao adicionar produto via RMI: " + e.getMessage();
+            }
     }
 
     public  String removeProductRMI(String productId, int quantity) {
         try {
-            return remoteServer.stock_update(productId, -quantity);  // Note o sinal negativo para indicar a remoção
+            String signedResponse = remoteServer.stock_update(productId, -quantity);
+
+            // Separar a mensagem e a assinatura
+            String[] parts = signedResponse.split("\\.");
+            if (parts.length == 2) {
+                String message = parts[0];
+                String signature = parts[1];
+                PublicKey pubKey = remoteServer.get_pubKey();
+
+                // Verificar a assinatura
+                if (verifySignature(message, signature, pubKey)) {
+                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
+                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
+                    return signedResponse;
+                } else {
+                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
+                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
+                }
+            } else {
+                System.err.println("Formato inválido da mensagem recebida.");
+                return "Formato inválido da mensagem recebida.";
+            }
+
         } catch (Exception e) {
-            return "Erro ao remover produto: " + e.getMessage();
+            e.printStackTrace();
+            return "Erro ao remover produto via RMI: " + e.getMessage();
         }
     }
 

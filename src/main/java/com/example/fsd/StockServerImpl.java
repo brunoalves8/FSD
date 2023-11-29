@@ -71,7 +71,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 resultMessage = "Quantidade não modificada.";
             }
 
-            String signedMessage = resultMessage + ".ASSINATURA:" + Server.generateSignature(resultMessage);
+            String signedMessage = resultMessage + "." + Server.generateSignature(resultMessage);
             return signedMessage;
 
 
