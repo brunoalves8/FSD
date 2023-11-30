@@ -99,9 +99,11 @@ public class ServerThread extends Thread{
 
                 if ("ADD".equals(action)) {
                     StockManagement.addProductQuantity("stock88.csv", productId, quantity);
+                    stockServerImpl.notifyClients("Produto (ID:" + productId + ") foi atualizado.");
                     msg = "Quantidade adicionada com sucesso!";
                 } else if ("REMOVE".equals(action)) {
                     StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
+                    stockServerImpl.notifyClients("Produto (ID:" + productId + ") foi atualizado.");
                     msg = "Quantidade removida com sucesso!";
                 }
                 String signedMessage = msg + "." + Server.generateSignature(msg);
