@@ -278,13 +278,13 @@ public class ClientRMI {
                     String productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
                     Integer qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
                     String responseAdd = rmiClient.addProductRMI(productIdToAdd, qtdToAdd);
-                    System.out.println(responseAdd);
+
                     break;
                 case 3:
                     String productIdToRemove = readString("Qual o id do produto que pretende remover?");
                     Integer qtdToRemove = readInteger("Quantas unidades pretende remover desse produto?");
                     String responseRemove = rmiClient.removeProductRMI(productIdToRemove, qtdToRemove);
-                    System.out.println(responseRemove);
+
                     break;
                 case 4:
                     continuar = false; // encerrar o loop

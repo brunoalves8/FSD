@@ -84,12 +84,6 @@ public class Client {
     private void connect() {
         try {
             socket = new Socket(serverAddress, port);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            // Enviar comando para obter a chave pública
-            out.println("GET_PUBKEY");
-
             stateOfConnection = true;
         } catch (IOException e) {
             System.err.println("Erro ao conectar ao servidor: " + e.getMessage());
@@ -125,37 +119,22 @@ public class Client {
         return stateOfConnection;
     }
     public void sendStockRequest() {
-        connect();
-        stateOfConnection=false;
-        try (
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             ) {
+    connect();
+    stateOfConnection=false;
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
 
             out.println("STOCK_REQUEST");
             String response;
 
             while ((response = in.readLine()) != null && !response.isEmpty()) {
-                if (response.startsWith("STOCK_RESPONSE")) {
-                    String[] parts = response.split("\\.");
-                   if(parts.length == 2) {
-                       String message = parts[0];
-                       String signature = parts[1];
-
-                       if (verifySignature(message, signature, serverPublicKey)) {
-                           List<String> produtosEmStock = StockManagement.getAllStockProductsList("stock88.csv");
-
-                           StringBuilder response2 = new StringBuilder("Informação de stocks:\nID     NOME\n");
-
-                           produtosEmStock.forEach(produto -> response2.append(produto).append("\n"));
-                       } else {
-                           System.err.println("Assinatura inválida.");
-                       }
-                   }else{
-                       System.out.println("Não foi possivel separar a mensagem da assinatura");
-                   }
-
+                if (response.equals("STOCK_RESPONSE")) {
+                    for (int i = 0; i < 10; i++) {
+                        System.out.println();
+                    }
+                    System.out.println("Informação de stocks:");
+                    System.out.println("ID     NOME");
                 } else {
                     System.out.println(response);
                 }
@@ -206,29 +185,16 @@ public class Client {
 
             String response = in.readLine();
 
-            if (response != null) {
-                // Separa a mensagem da assinatura
-                String[] parts = response.split("\\.", 2);
-                String message = parts[0];
-                String signature = parts[1];
-
-                if (verifySignature(message, signature, serverPublicKey)) {
-                    // Assinatura verificada
-                    System.out.println("Resposta do servidor: " + message);
-                    if ("STOCK_UPDATED".equals(response)) {
-                        System.out.println("Stock atualizado com sucesso!");
-                    } else {
-                        System.out.println("Erro ao atualizar o stock.");
-                    }
-                } else {
-                    // Assinatura inválida
-                    System.err.println("Assinatura da resposta do servidor inválida.");
-                }
+            if ("STOCK_UPDATED".equals(response)) {
+                System.out.println("Stock atualizado com sucesso!");
+            } else {
+                System.out.println("Erro ao atualizar o stock.");
             }
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
         }
     }
+
 
     public static Integer getCurrentQuantityFromCSV(String filePath, String productID) {
         try (Reader in = new FileReader(filePath)) {
@@ -260,8 +226,6 @@ public class Client {
 
     public static void addProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
-        try{
-            String response = null;
         while (!validInput) {
             String productID = readString("Qual o id do produto que pretende adicionar?");
             Integer qtd = readInteger("Quantas unidades pretende adicionar desse produto?");
@@ -277,7 +241,7 @@ public class Client {
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
                     StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
                     stockServer.notifyClients(notificationMessage);
-                    response = notificationMessage + "." + generateSignature(notificationMessage);
+
                     validInput = true; // Sai do loop
                 } else if(qtd<0) {
                     System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
@@ -290,16 +254,6 @@ public class Client {
                 System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
         }
-
-        if (verifySignature(response)) {
-            System.out.println(response);
-        } else {
-            System.out.println("Invalid response signature");
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-            System.out.println("Error processing the request.");
-    }
     }
 
     private static boolean verifySignature(String messageWithSignature) {
@@ -330,42 +284,32 @@ public class Client {
 
     public static void removeProduct(Client client) throws RemoteException, NotBoundException {
         boolean validInput = false;
-        try {
-            String response = null;
-            while (!validInput) {
-                String productID = readString("Qual o id do produto que pretende remover?");
-                Integer qtd = readInteger("Quantas unidades pretende remover desse produto?");
+        while (!validInput) {
+            String productID = readString("Qual o id do produto que pretende remover?");
+            Integer qtd = readInteger("Quantas unidades pretende remover desse produto?");
 
-                // Verificar a existência do ID e a quantidade no CSV
-                Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);
+            // Verificar a existência do ID e a quantidade no CSV
+            Integer currentQuantity = getCurrentQuantityFromCSV("stock88.csv", productID);
 
-                if (currentQuantity != null) {
-                    // Se o ID foi encontrado e há unidades suficientes em stock para remover
-                    if (qtd > 0 && currentQuantity >= qtd) {
-                        client.updateStock("REMOVE", productID, qtd);
-                        String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-                        StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                        stockServer.notifyClients(notificationMessage);
-                        response = notificationMessage + "." + generateSignature(notificationMessage);
-                        validInput = true; // Sai do loop
-                    } else if (qtd < 0) {
-                        System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
-                    } else {
-                        System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
-                    }
+            if (currentQuantity != null) {
+                // Se o ID foi encontrado e há unidades suficientes em stock para remover
+                if (qtd > 0 && currentQuantity >= qtd) {
+                    client.updateStock("REMOVE", productID, qtd);
+                    //Remover as próximas três linhas se for preciso ou adicionar
+                    String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
+                    stockServer.notifyClients(notificationMessage);
+
+                    validInput = true; // Sai do loop
+                } else if(qtd<0) {
+                    System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
+
                 } else {
-                    System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
+                    System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
                 }
-            }
-
-            if (verifySignature(response)) {
-                System.out.println(response);
             } else {
-                System.out.println("Assinatura inválida");
+                System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Erro ao processar a solicitação.");
         }
     }
 
@@ -384,11 +328,15 @@ public class Client {
         }
     }
 
+    // Dentro da classe Client, no método getServerPublicKey(Socket socket)
     public PublicKey getServerPublicKey(Socket socket) {
         PublicKey key = null;
         try {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Solicitar a chave pública ao servidor
+            out.println("GET_PUBKEY");
 
             // Receber a resposta do servidor
             String response = in.readLine();
@@ -407,12 +355,13 @@ public class Client {
         return key;
     }
 
+
     public static void main(String[] args) throws IOException, NotBoundException {
         Client client = login();
         client.connect();
         boolean continuar = true;
 
-        serverPublicKey = client.getServerPublicKey(client.socket);
+        serverPublicKey= client.getServerPublicKey(client.socket);
 
         client.sendStockRequest();
         //Timer timer = new Timer();

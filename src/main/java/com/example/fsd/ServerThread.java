@@ -41,30 +41,21 @@ public class ServerThread extends Thread{
     }
     public void run() {
 
-        try (
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
             System.out.println("Cliente conectado ao servidor no endereço " + socket.getInetAddress() + " na porta " + socket.getPort());
 
             String request = in.readLine();
-
-
-            String response = null;
-            String signedResponse;
 
             if ("STOCK_REQUEST".equals(request)) {
 
                 String filePath = "stock88.csv";
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
 
+                out.println("STOCK_RESPONSE");
                 for (String produto : produtosEmStock) {
-                    response = String.join("\n", produto);
+                    out.println(produto);
                 }
-
-                signedResponse = signMessage(response);
-
-                out.println("STOCK_RESPONSE" + ": " +response + "." + signedResponse + "\n");
-
             } else if ("STOCK_UPDATE".equals(request)) {
                 String action = in.readLine();
                 String productId = in.readLine();
@@ -75,16 +66,12 @@ public class ServerThread extends Thread{
                 } else if ("REMOVE".equals(action)) {
                     StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
                 }
-
-                response = "STOCK_UPDATED";
-                signedResponse = signMessage(response);
-
-                out.println(response + "." + signedResponse);
-
-            }else if("GET_PUBKEY".equals(request)){
-                String publicKeyEncoded = convertPublicKeyToString(Server.getPublicKey());
-                out.println("PUBLIC_KEY " + publicKeyEncoded);
-            }
+                out.println("STOCK_UPDATED");
+            } else if ("GET_PUBKEY".equals(request)) {
+            // Responda à solicitação da chave pública
+            String publicKeyString = convertPublicKeyToString(Server.getPublicKey());
+            out.println("PUBLIC_KEY " + publicKeyString);
+        }
 
         } catch (IOException e) {
             e.printStackTrace();
