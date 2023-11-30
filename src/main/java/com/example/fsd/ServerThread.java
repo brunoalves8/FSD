@@ -2,12 +2,12 @@ package com.example.fsd;
 
 import java.io.*;
 import java.net.Socket;
-import java.security.MessageDigest;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
 import java.util.Base64;
 import java.util.List;
+
+import static java.lang.System.out;
 
 public class ServerThread extends Thread{
     private Socket socket;
@@ -39,6 +39,35 @@ public class ServerThread extends Thread{
         byte[] publicKeyBytes = publicKey.getEncoded();
         return Base64.getEncoder().encodeToString(publicKeyBytes);
     }
+
+    private String generateMessageSummary(String message) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(message.getBytes(StandardCharsets.UTF_8));
+
+            // Converte o resumo (hash) para uma representação hexadecimal
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null; // Ou lance uma exceção adequada para indicar o erro
+        }
+    }
+    private void sendSignedMessage(String message) {
+        String messageSummary = generateMessageSummary(message);
+        String signature = signMessage(messageSummary);
+        String messageWithSignature = messageSummary + "." + signature;
+
+        out.println(messageWithSignature);
+    }
+
+
     public void run() {
 
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -46,34 +75,46 @@ public class ServerThread extends Thread{
             System.out.println("Cliente conectado ao servidor no endereço " + socket.getInetAddress() + " na porta " + socket.getPort());
 
             String request = in.readLine();
+            String msg = null;
 
             if ("STOCK_REQUEST".equals(request)) {
 
-                String filePath = "stock88.csv";
-                List<String> produtosEmStock = StockManagement.getAllStockProductsList(filePath);
 
+
+                List<String> produtosEmStock = StockManagement.getAllStockProductsList("stock88.csv");
+                StringBuilder response = new StringBuilder("Informação de stocks:,");
+                response.append("ID     NOME").append(",");
+                produtosEmStock.forEach(produto -> response.append(produto).append(","));
                 out.println("STOCK_RESPONSE");
-                for (String produto : produtosEmStock) {
-                    out.println(produto);
-                }
-            } else if ("STOCK_UPDATE".equals(request)) {
+                out.flush();
+
+                String signedMessage = response.toString() + "." + Server.generateSignature(response.toString());
+                out.println(signedMessage);
+                out.flush();
+            }
+            else if ("STOCK_UPDATE".equals(request)) {
                 String action = in.readLine();
                 String productId = in.readLine();
                 int quantity = Integer.parseInt(in.readLine());
 
                 if ("ADD".equals(action)) {
                     StockManagement.addProductQuantity("stock88.csv", productId, quantity);
+                    msg = "Quantidade adicionada com sucesso";
                 } else if ("REMOVE".equals(action)) {
                     StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
+                    msg = "Quantidade removida com sucesso";
                 }
                 out.println("STOCK_UPDATED");
+                sendSignedMessage(msg);
+
             } else if ("GET_PUBKEY".equals(request)) {
             // Responda à solicitação da chave pública
             String publicKeyString = convertPublicKeyToString(Server.getPublicKey());
             out.println("PUBLIC_KEY " + publicKeyString);
+            sendSignedMessage("PUBLIC_KEY " + publicKeyString);
         }
 
-        } catch (IOException e) {
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -83,5 +124,4 @@ public class ServerThread extends Thread{
             }
         }
     }
-
 }

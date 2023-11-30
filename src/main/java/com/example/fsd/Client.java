@@ -118,32 +118,79 @@ public class Client {
     {
         return stateOfConnection;
     }
+
+
     public void sendStockRequest() {
-    connect();
-    stateOfConnection=false;
+        connect();
+        stateOfConnection = false;
+
         try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-
             out.println("STOCK_REQUEST");
-            String response;
+            out.flush();
 
-            while ((response = in.readLine()) != null && !response.isEmpty()) {
-                if (response.equals("STOCK_RESPONSE")) {
-                    for (int i = 0; i < 10; i++) {
-                        System.out.println();
+            String response = in.readLine();
+
+            if ("STOCK_RESPONSE".equals(response)) {
+                //out.println("PRODUCTS_STRING");
+                // Receber a string contendo os produtos em estoque e a assinatura
+                String receivedMessageWithSignature = in.readLine();
+
+
+                if (receivedMessageWithSignature != null) {
+                    // Separar a mensagem e a assinatura usando '.' como delimitador
+                    String[] parts = receivedMessageWithSignature.split("\\.");
+
+                    if (parts.length == 2) {
+                        String receivedMessage = parts[0];
+                        String receivedSignature = parts[1];
+
+                        // Verificar a assinatura
+                        if (processSignedMessage(receivedMessage, receivedSignature, serverPublicKey)) {
+                            // Assinatura verificada com sucesso
+                            System.out.println("Mensagem recenida e assinatura verificada com sucesso.");
+
+                            // Separar a string em uma lista de produtos usando '\n' como delimitador
+                            String[] receivedProducts = receivedMessage.split(",");
+
+                            // Imprimir cada produto
+                            for (String produto : receivedProducts) {
+                                System.out.println(produto);
+                            }
+                        } else {
+                            // Assinatura inválida
+                            System.err.println("Assinatura inválida.");
+                        }
+                    } else {
+                        System.err.println("Formato inválido da mensagem recebida.");
                     }
-                    System.out.println("Informação de stocks:");
-                    System.out.println("ID     NOME");
                 } else {
-                    System.out.println(response);
+                    System.err.println("Mensagem com assinatura nula recebida.");
                 }
+            } else {
+                System.err.println("Resposta inválida do servidor: " + response);
             }
+
             stateOfConnection = true; // pedido foi bem sucedido
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
         }
     }
+
+    private boolean processSignedMessage(String message, String encodedSignature, PublicKey publicKey) {
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(publicKey);
+            signature.update(message.getBytes());
+            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
+            return signature.verify(signatureBytes);
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
+            return false;
+        }
+    }
+
 
 
     public static int lerOpcoesMenusInteiros(String[] opcoes) {
