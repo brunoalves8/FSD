@@ -105,7 +105,8 @@ public class ServerThread extends Thread{
                     msg = "Quantidade removida com sucesso";
                 }
                 out.println("STOCK_UPDATED");
-                sendSignedMessage(msg);
+                String signedMessage = msg + "." + Server.generateSignature(msg);
+                out.println(signedMessage);
 
             } else if ("GET_PUBKEY".equals(request)) {
             // Responda à solicitação da chave pública

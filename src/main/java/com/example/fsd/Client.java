@@ -232,6 +232,27 @@ public class Client {
 
             String response = in.readLine();
 
+            if (response != null) {
+                // Separar a mensagem e a assinatura usando '.' como delimitador
+                String[] parts = response.split("\\.");
+
+                if (parts.length == 2) {
+                    String receivedMessage = parts[0];
+                    String receivedSignature = parts[1];
+
+                    if (processSignedMessage(receivedMessage, receivedSignature, serverPublicKey)) {
+                        System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
+
+                    } else {
+                        System.err.println("Assinatura inválida.");
+                    }
+                } else {
+                    System.err.println("Formato inválido da mensagem recebida.");
+                }
+            } else {
+                System.err.println("Mensagem com assinatura nula recebida.");
+            }
+
             if ("STOCK_UPDATED".equals(response)) {
                 System.out.println("Stock atualizado com sucesso!");
             } else {

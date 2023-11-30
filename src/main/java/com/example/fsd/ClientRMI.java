@@ -89,7 +89,7 @@ public class ClientRMI {
     }
 
 
-    public String requestStock() {
+    public void requestStock() {
         try {
             String signedResponse = remoteServer.stock_request();
 
@@ -99,28 +99,18 @@ public class ClientRMI {
                 String message = parts[0];
                 String signature = parts[1];
                 PublicKey pubKey = remoteServer.get_pubKey();
-
-                // Verificar a assinatura
-                if (verifySignature(message, signature, pubKey)) {
-                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
-                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
-                    return signedResponse;
-                } else {
-                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
-                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
-                }
+                SecureDirectNotificationImpl secureNotification = new SecureDirectNotificationImpl(pubKey);
+                secureNotification.stock_updated_signed(message, signature);
             } else {
                 System.err.println("Formato inválido da mensagem recebida.");
-                return "Formato inválido da mensagem recebida.";
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return "Erro ao obter dados via RMI: " + e.getMessage();
+            System.out.println("Erro ao obter dados via RMI: " + e.getMessage());
         }
-
     }
 
-    public  String addProductRMI(String productId, int quantity) {
+    public  void addProductRMI(String productId, int quantity) {
         try {
             String signedResponse = remoteServer.stock_update(productId, quantity);
 
@@ -130,28 +120,19 @@ public class ClientRMI {
                 String message = parts[0];
                 String signature = parts[1];
                 PublicKey pubKey = remoteServer.get_pubKey();
-
-                // Verificar a assinatura
-                if (verifySignature(message, signature, pubKey)) {
-                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
-                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
-                    return signedResponse;
-                } else {
-                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
-                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
-                }
+                SecureDirectNotificationImpl secureNotification = new SecureDirectNotificationImpl(pubKey);
+                secureNotification.stock_updated_signed(message, signature);
             } else {
                 System.err.println("Formato inválido da mensagem recebida.");
-                return "Formato inválido da mensagem recebida.";
             }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                return "Erro ao adicionar produto via RMI: " + e.getMessage();
+            System.out.println("Erro ao adicionar produto via RMI: " + e.getMessage());
             }
     }
 
-    public  String removeProductRMI(String productId, int quantity) {
+    public  void removeProductRMI(String productId, int quantity) {
         try {
             String signedResponse = remoteServer.stock_update(productId, -quantity);
 
@@ -162,23 +143,16 @@ public class ClientRMI {
                 String signature = parts[1];
                 PublicKey pubKey = remoteServer.get_pubKey();
 
-                // Verificar a assinatura
-                if (verifySignature(message, signature, pubKey)) {
-                    System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
-                    System.out.println(message); // Aqui você pode imprimir a mensagem ou processá-la conforme necessário.
-                    return signedResponse;
-                } else {
-                    System.err.println("Assinatura inválida. A mensagem pode ter sido alterada.");
-                    return "Assinatura inválida. A mensagem pode ter sido alterada.";
-                }
+                SecureDirectNotificationImpl secureNotification = new SecureDirectNotificationImpl(pubKey);
+                secureNotification.stock_updated_signed(message, signature);
             } else {
                 System.err.println("Formato inválido da mensagem recebida.");
-                return "Formato inválido da mensagem recebida.";
+
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "Erro ao remover produto via RMI: " + e.getMessage();
+            System.out.println("Erro ao remover produto via RMI: " + e.getMessage());
         }
     }
 
@@ -277,13 +251,13 @@ public class ClientRMI {
                 case 2:
                     String productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
                     Integer qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
-                    String responseAdd = rmiClient.addProductRMI(productIdToAdd, qtdToAdd);
+                    rmiClient.addProductRMI(productIdToAdd, qtdToAdd);
 
                     break;
                 case 3:
                     String productIdToRemove = readString("Qual o id do produto que pretende remover?");
                     Integer qtdToRemove = readInteger("Quantas unidades pretende remover desse produto?");
-                    String responseRemove = rmiClient.removeProductRMI(productIdToRemove, qtdToRemove);
+                    rmiClient.removeProductRMI(productIdToRemove, qtdToRemove);
 
                     break;
                 case 4:
