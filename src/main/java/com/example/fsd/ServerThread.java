@@ -99,12 +99,11 @@ public class ServerThread extends Thread{
 
                 if ("ADD".equals(action)) {
                     StockManagement.addProductQuantity("stock88.csv", productId, quantity);
-                    msg = "Quantidade adicionada com sucesso";
+                    msg = "Quantidade adicionada com sucesso!";
                 } else if ("REMOVE".equals(action)) {
                     StockManagement.removeProductQuantity("stock88.csv", productId, quantity);
-                    msg = "Quantidade removida com sucesso";
+                    msg = "Quantidade removida com sucesso!";
                 }
-                out.println("STOCK_UPDATED");
                 String signedMessage = msg + "." + Server.generateSignature(msg);
                 out.println(signedMessage);
 

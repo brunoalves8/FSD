@@ -13,6 +13,7 @@ import java.rmi.registry.Registry;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class Client {
@@ -240,9 +241,10 @@ public class Client {
                     String receivedMessage = parts[0];
                     String receivedSignature = parts[1];
 
+
                     if (processSignedMessage(receivedMessage, receivedSignature, serverPublicKey)) {
                         System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
-
+                        System.out.println(receivedMessage);
                     } else {
                         System.err.println("Assinatura inválida.");
                     }
@@ -251,12 +253,6 @@ public class Client {
                 }
             } else {
                 System.err.println("Mensagem com assinatura nula recebida.");
-            }
-
-            if ("STOCK_UPDATED".equals(response)) {
-                System.out.println("Stock atualizado com sucesso!");
-            } else {
-                System.out.println("Erro ao atualizar o stock.");
             }
         } catch (IOException e) {
             System.out.println("Erro ao comunicar com o servidor: " + e);
