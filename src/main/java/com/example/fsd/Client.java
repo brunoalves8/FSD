@@ -149,7 +149,7 @@ public class Client {
                         // Verificar a assinatura
                         if (processSignedMessage(receivedMessage, receivedSignature, serverPublicKey)) {
                             // Assinatura verificada com sucesso
-                            System.out.println("Mensagem recenida e assinatura verificada com sucesso.");
+                            System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
 
                             // Separar a string em uma lista de produtos usando '\n' como delimitador
                             String[] receivedProducts = receivedMessage.split(",");
