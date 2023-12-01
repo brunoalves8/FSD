@@ -308,14 +308,14 @@ public class Client {
 
                     validInput = true; // Sai do loop
                 } else if(qtd<0) {
-                    System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
+                    System.err.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
 
                 }else{
-                    System.out.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
+                    System.err.println("Quantidade inválida! A quantidade total não pode exceder 10.000. Tente novamente.");
 
                 }
             } else {
-                System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
+                System.err.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
         }
     }
@@ -366,13 +366,13 @@ public class Client {
 
                     validInput = true; // Sai do loop
                 } else if(qtd<0) {
-                    System.out.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
+                    System.err.println("Quantidade inválida! A quantidade inserida não pode ser negativa");
 
                 } else {
-                    System.out.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
+                    System.err.println("Quantidade inválida! Não há unidades suficientes em stock para remover. Tente novamente.");
                 }
             } else {
-                System.out.println("ID do produto não encontrado. Por favor, insira um ID válido.");
+                System.err.println("ID do produto não encontrado. Por favor, insira um ID válido.");
             }
         }
     }

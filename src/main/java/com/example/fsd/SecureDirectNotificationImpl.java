@@ -19,7 +19,7 @@ public class SecureDirectNotificationImpl extends UnicastRemoteObject implements
     public void stock_updated_signed(String message, String signature) throws RemoteException {
 
         if (verifySignature(message, signature, serverPublicKey)) {
-            System.out.println("Mensagem recebida e assinatura verificada:\n" + message);
+            System.out.println("Mensagem recebida e assinatura verificada com sucesso.\n" + message);
         } else {
             System.err.println("Assinatura Inválida.");
         }

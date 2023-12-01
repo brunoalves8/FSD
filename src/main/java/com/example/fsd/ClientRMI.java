@@ -1,5 +1,12 @@
 package com.example.fsd;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -219,6 +226,21 @@ public class ClientRMI {
             return null;
         }
     }
+
+    public boolean verifyIfExistsProductID(String filePath, String productID) {
+        try (Reader in = new FileReader(filePath)) {
+            CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(in);
+            for (CSVRecord record : parser) {
+                if (record.get("ID").equals(productID)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false; // Retorna null se o ID não for encontrado
+    }
+
     public static void main(String[] args) {
         ClientRMI rmiClient = connection();
 
@@ -249,14 +271,32 @@ public class ClientRMI {
                     }
                     break;
                 case 2:
-                    String productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
-                    Integer qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
+                    boolean verified = false;
+                    String productIdToAdd = null;
+                    Integer qtdToAdd = null;
+                    while(verified == false){
+                    productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
+                    qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
+                    verified = rmiClient.verifyIfExistsProductID("stock88.csv",productIdToAdd);
+                        if(verified == false){
+                            System.err.println("ID inválido. Tente novamente");
+                        }
+                    }
                     rmiClient.addProductRMI(productIdToAdd, qtdToAdd);
-
                     break;
                 case 3:
-                    String productIdToRemove = readString("Qual o id do produto que pretende remover?");
-                    Integer qtdToRemove = readInteger("Quantas unidades pretende remover desse produto?");
+                    boolean verified2 = false;
+                    String productIdToRemove = null;
+                    Integer qtdToRemove = null;
+                    while(verified2 == false){
+                        productIdToRemove = readString("Qual o id do produto que pretende adicionar?");
+                        qtdToRemove = readInteger("Quantas unidades pretende remover desse produto?");
+                        verified2 = rmiClient.verifyIfExistsProductID("stock88.csv",productIdToRemove);
+                        if(verified2 == false){
+                            System.err.println("ID iválido. Tente novamente");
+                        }
+                    }
+
                     rmiClient.removeProductRMI(productIdToRemove, qtdToRemove);
 
                     break;
