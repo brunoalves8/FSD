@@ -69,32 +69,86 @@ public class ClientRMI {
         return client;
     }
 
-    private String convertPublicKeyToString(PublicKey publicKey) {
-        byte[] publicKeyBytes = publicKey.getEncoded();
-        return Base64.getEncoder().encodeToString(publicKeyBytes);
-    }
-    private boolean verifySignature(String message, String encodedSignature, PublicKey publicKey) {
+    public void closeClient() {
         try {
-            // Inicializa o objeto de assinatura com a chave pública
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(publicKey);
-
-            // Atualiza o objeto de assinatura com os bytes da mensagem
-            signature.update(message.getBytes("UTF-8"));
-
-            // Decodifica a assinatura da representação em String
-            byte[] signatureBytes = Base64.getDecoder().decode(encodedSignature);
-
-            // Verifica a assinatura
-
-            return signature.verify(signatureBytes);
-
+            if (clientStub != null) { // 'clientStub' é a referência ao objeto remoto do cliente
+                Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
+                StockServer server = (StockServer) registry.lookup("StockServer");
+                server.unsubscribe(clientStub);
+                UnicastRemoteObject.unexportObject(clientStub, true);
+                System.out.println("Client desresgistado do servidor.");
+            }
         } catch (Exception e) {
-            System.err.println("Erro ao verificar a assinatura: " + e.getMessage());
-            return false;
+            System.err.println("Erro durante o fechamento do cliente: " + e.getMessage());
         }
     }
 
+
+
+
+    public PublicKey getServerPublicKey() {
+        try {
+            // Obtém a referência do objeto remoto do servidor
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+
+            // Chama o método para obter a chave pública
+            return server.get_pubKey();
+        } catch (Exception e) {
+            System.err.println("Erro ao obter a chave pública do servidor: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public void registerForNotifications() {
+        try {
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
+            server.subscribe(notificationStub);
+            System.out.println("Cliente registado para notificações no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
+        }
+    }
+
+    public void registerForSecureNotifications(PublicKey serverPublicKey, ClientRMI client) {
+        try {
+            SecureDirectNotificationImpl clientNotification = new SecureDirectNotificationImpl(serverPublicKey); // serverPublicKey deve ser obtido de alguma forma
+            Registry registry = LocateRegistry.getRegistry(client.endIpFornc, 1099);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            server.subscribe((SecureDirectNotification) clientNotification);
+            System.out.println("Cliente registado para notificações seguras no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
+        }
+    }
+
+    public void unregisterForNotifications() {
+        try {
+            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
+            server.unsubscribe(notificationStub);
+            System.out.println("Cliente removido receber para notificações no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se desregistrar para notificações: " + e.getMessage());
+        }
+    }
+
+    public void unregisterForSecureNotifications(PublicKey serverPublicKey, ClientRMI client) {
+        try {
+            SecureDirectNotificationImpl clientNotification = new SecureDirectNotificationImpl(serverPublicKey); // serverPublicKey deve ser obtido de alguma forma
+            Registry registry = LocateRegistry.getRegistry(client.endIpFornc, 1099);
+            StockServer server = (StockServer) registry.lookup("StockServer");
+            server.unsubscribe(clientNotification);
+            System.out.println("Cliente removido para receber notificações seguras no servidor.");
+        } catch (Exception e) {
+            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
+        }
+    }
 
     public void requestStock() {
         try {
@@ -160,70 +214,6 @@ public class ClientRMI {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Erro ao remover produto via RMI: " + e.getMessage());
-        }
-    }
-
-    public void registerForNotifications() {
-        try {
-            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
-            StockServer server = (StockServer) registry.lookup("StockServer");
-            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
-            server.subscribe(notificationStub);
-            System.out.println("Registado para notificações no servidor.");
-        } catch (Exception e) {
-            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
-        }
-    }
-
-    public void registerForSecureNotifications(PublicKey serverPublicKey, ClientRMI client) {
-        try {
-            SecureDirectNotificationImpl clientNotification = new SecureDirectNotificationImpl(serverPublicKey); // serverPublicKey deve ser obtido de alguma forma
-            Registry registry = LocateRegistry.getRegistry(client.endIpFornc, 1099);
-            StockServer server = (StockServer) registry.lookup("StockServer");
-            server.subscribe((SecureDirectNotification) clientNotification);
-            System.out.println("Registado para notificações seguras no servidor.");
-        } catch (Exception e) {
-            System.err.println("Erro ao se registrar para notificações: " + e.getMessage());
-        }
-    }
-
-    public void unregisterForNotifications() {
-        try {
-            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
-            StockServer server = (StockServer) registry.lookup("StockServer");
-            DirectNotification notificationStub = (DirectNotification) UnicastRemoteObject.exportObject(new DirectNotificationImpl(), 0);
-            server.subscribe(notificationStub);
-            System.out.println("Desregistado para notificações no servidor.");
-        } catch (Exception e) {
-            System.err.println("Erro ao se desregistrar para notificações: " + e.getMessage());
-        }
-    }
-    public void closeClient() {
-        try {
-            if (clientStub != null) { // 'clientStub' é a referência ao objeto remoto do cliente
-                Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
-                StockServer server = (StockServer) registry.lookup("StockServer");
-                server.unsubscribe(clientStub);
-                UnicastRemoteObject.unexportObject(clientStub, true);
-                System.out.println("Client desresgistado do servidor.");
-            }
-        } catch (Exception e) {
-            System.err.println("Erro durante o fechamento do cliente: " + e.getMessage());
-        }
-    }
-
-    public PublicKey getServerPublicKey() {
-        try {
-            // Obtém a referência do objeto remoto do servidor
-            Registry registry = LocateRegistry.getRegistry(endIpFornc, Server.RMI_PORT);
-            StockServer server = (StockServer) registry.lookup("StockServer");
-
-            // Chama o método para obter a chave pública
-            return server.get_pubKey();
-        } catch (Exception e) {
-            System.err.println("Erro ao obter a chave pública do servidor: " + e.getMessage());
-            e.printStackTrace();
-            return null;
         }
     }
 
@@ -303,6 +293,7 @@ public class ClientRMI {
                 case 4:
                     continuar = false; // encerrar o loop
                     rmiClient.unregisterForNotifications();
+                    rmiClient.unregisterForSecureNotifications(serverPublicKey,rmiClient);
                     rmiClient.closeClient();
                     break;
             }

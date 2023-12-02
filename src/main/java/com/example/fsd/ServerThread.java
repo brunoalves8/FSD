@@ -17,29 +17,6 @@ public class ServerThread extends Thread{
         this.stockServerImpl = stockServerImpl;
     }
 
-    private String signMessage(String message) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(message.getBytes());
-            byte[] messageDigest = md.digest();
-
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(Server.getPrivateKey());
-            signature.update(messageDigest);
-            byte[] signatureBytes = signature.sign();
-            return Base64.getEncoder().encodeToString(signatureBytes);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    private String convertPublicKeyToString(PublicKey publicKey) {
-        byte[] publicKeyBytes = publicKey.getEncoded();
-        return Base64.getEncoder().encodeToString(publicKeyBytes);
-    }
-
     private String generateMessageSummary(String message) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -59,6 +36,23 @@ public class ServerThread extends Thread{
             return null; // Ou lance uma exceção adequada para indicar o erro
         }
     }
+    private String signMessage(String message) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(message.getBytes());
+            byte[] messageDigest = md.digest();
+
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(Server.getPrivateKey());
+            signature.update(messageDigest);
+            byte[] signatureBytes = signature.sign();
+            return Base64.getEncoder().encodeToString(signatureBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void sendSignedMessage(String message) {
         String messageSummary = generateMessageSummary(message);
         String signature = signMessage(messageSummary);
@@ -67,6 +61,10 @@ public class ServerThread extends Thread{
         out.println(messageWithSignature);
     }
 
+    private String convertPublicKeyToString(PublicKey publicKey) {
+        byte[] publicKeyBytes = publicKey.getEncoded();
+        return Base64.getEncoder().encodeToString(publicKeyBytes);
+    }
 
     public void run() {
 
@@ -78,8 +76,6 @@ public class ServerThread extends Thread{
             String msg = null;
 
             if ("STOCK_REQUEST".equals(request)) {
-
-
 
                 List<String> produtosEmStock = StockManagement.getAllStockProductsList("stock88.csv");
                 StringBuilder response = new StringBuilder("Informação de stocks:,");
@@ -110,7 +106,7 @@ public class ServerThread extends Thread{
                 out.println(signedMessage);
 
             } else if ("GET_PUBKEY".equals(request)) {
-            // Responda à solicitação da chave pública
+
             String publicKeyString = convertPublicKeyToString(Server.getPublicKey());
             out.println("PUBLIC_KEY " + publicKeyString);
             sendSignedMessage("PUBLIC_KEY " + publicKeyString);

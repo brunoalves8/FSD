@@ -73,7 +73,7 @@ public class StockManagement {
                 updatedRecordsMap.add(recordMap);
             }
 
-// Reescrever o arquivo CSV
+            // Reescrever o arquivo CSV
             try (Writer out = new FileWriter(filePath)) {
                 CSVPrinter printer = CSVFormat.DEFAULT.withHeader("ID", "Nome", "Quantidade").print(out);
                 for (Map<String, String> recordMap : updatedRecordsMap) {
