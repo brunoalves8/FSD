@@ -305,8 +305,12 @@ public class Client {
                         int porta = 1099; // Porta padrão para o registro RMI
 
                         // Conecte-se ao registro RMI no servidor
-                        StockServer stockServer =(StockServer) LocateRegistry.getRegistry(servidorIP, porta);
-                        stockServer.notifyClients(notificationMessage);
+                        Registry registry = LocateRegistry.getRegistry(servidorIP, porta);
+
+                        // Agora você pode procurar os objetos remotos registrados no servidor
+                        StockServer stub = (StockServer) registry.lookup("StockServer");
+
+                        stub.notifyClients(notificationMessage);
                     } catch (Exception e) {
                         System.err.println("Erro ao estabelecer ligação com cliente RMI: " + e.toString());
                         e.printStackTrace();
@@ -348,8 +352,12 @@ public class Client {
                         int porta = 1099; // Porta padrão para o registro RMI
 
                         // Conecte-se ao registro RMI no servidor
-                        StockServer stockServer =(StockServer) LocateRegistry.getRegistry(servidorIP, porta);
-                        stockServer.notifyClients(notificationMessage);
+                        Registry registry = LocateRegistry.getRegistry(servidorIP, porta);
+
+                        // Agora você pode procurar os objetos remotos registrados no servidor
+                        StockServer stub = (StockServer) registry.lookup("StockServer");
+
+                        stub.notifyClients(notificationMessage);
                     } catch (Exception e) {
                         System.err.println("Erro ao estabelecer ligação com cliente RMI: " + e.toString());
                         e.printStackTrace();
