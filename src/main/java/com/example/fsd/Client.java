@@ -298,8 +298,19 @@ public class Client {
                     client.updateStock("ADD", productID, qtd);
 
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);
+
+                    try {
+                        // Especifique o endereço IP e a porta do servidor RMI
+                        String servidorIP = client.serverAddress; // Substitua pelo IP do servidor
+                        int porta = 1099; // Porta padrão para o registro RMI
+
+                        // Conecte-se ao registro RMI no servidor
+                        StockServer stockServer =(StockServer) LocateRegistry.getRegistry(servidorIP, porta);
+                        stockServer.notifyClients(notificationMessage);
+                    } catch (Exception e) {
+                        System.err.println("Erro ao estabelecer ligação com cliente RMI: " + e.toString());
+                        e.printStackTrace();
+                    }
 
                     validInput = true; // Sai do loop
                 } else if(qtd<0) {
@@ -331,8 +342,18 @@ public class Client {
                     client.updateStock("REMOVE", productID, qtd);
                     //Remover as próximas três linhas se for preciso ou adicionar
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
-                    StockServer stockServer = (StockServer) LocateRegistry.getRegistry(Server.RMI_PORT).lookup("StockServer");
-                    stockServer.notifyClients(notificationMessage);
+                    try {
+                        // Especifique o endereço IP e a porta do servidor RMI
+                        String servidorIP = client.serverAddress; // Substitua pelo IP do servidor
+                        int porta = 1099; // Porta padrão para o registro RMI
+
+                        // Conecte-se ao registro RMI no servidor
+                        StockServer stockServer =(StockServer) LocateRegistry.getRegistry(servidorIP, porta);
+                        stockServer.notifyClients(notificationMessage);
+                    } catch (Exception e) {
+                        System.err.println("Erro ao estabelecer ligação com cliente RMI: " + e.toString());
+                        e.printStackTrace();
+                    }
 
                     validInput = true; // Sai do loop
                 } else if(qtd<0) {
