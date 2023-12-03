@@ -44,4 +44,3 @@ public class SecureDirectNotificationImpl extends UnicastRemoteObject implements
         return null;
     }
 }
-

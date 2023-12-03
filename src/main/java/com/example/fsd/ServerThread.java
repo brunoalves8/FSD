@@ -107,10 +107,10 @@ public class ServerThread extends Thread{
 
             } else if ("GET_PUBKEY".equals(request)) {
 
-            String publicKeyString = convertPublicKeyToString(Server.getPublicKey());
-            out.println("PUBLIC_KEY " + publicKeyString);
-            sendSignedMessage("PUBLIC_KEY " + publicKeyString);
-        }
+                String publicKeyString = convertPublicKeyToString(Server.getPublicKey());
+                out.println("PUBLIC_KEY " + publicKeyString);
+                sendSignedMessage("PUBLIC_KEY " + publicKeyString);
+            }
 
         } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();

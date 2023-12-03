@@ -51,7 +51,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
                 }
 
                 StockManagement.addProductQuantity("stock88.csv", id, qtd);
-                 String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
+                String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
                 // String notificationMessage = stock_request(); // esta liinha mostra o stock
                 notifyClients(notificationMessage);
                 resultMessage = "Quantidade adicionada com sucesso!";
@@ -63,7 +63,7 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
 
                 StockManagement.removeProductQuantity("stock88.csv", id, Math.abs(qtd));
                 String notificationMessage = "Produto (ID:" + id + ") foi atualizado.";   //Esta linha mostra qual o produto que foi atualizado
-               // String notificationMessage = stock_request(); // esta linha mostra o stock
+                // String notificationMessage = stock_request(); // esta linha mostra o stock
                 notifyClients(notificationMessage);
                 resultMessage = "Quantidade removida com sucesso!";
 
@@ -104,14 +104,14 @@ public class StockServerImpl extends UnicastRemoteObject implements StockServer 
     @Override
     public void notifyClients(String message) {
         synchronized (objectClientRMIMap) {
-        for (DirectNotification client : objectClientRMIMap.values()) {
-            try {
-                client.Stock_updated(message);
-            } catch (RemoteException e) {
-                System.out.println("Não foi possivel notificar os clientes");
-            }
+            for (DirectNotification client : objectClientRMIMap.values()) {
+                try {
+                    client.Stock_updated(message);
+                } catch (RemoteException e) {
+                    System.out.println("Não foi possivel notificar os clientes");
+                }
 
-          }
+            }
         }
     }
 

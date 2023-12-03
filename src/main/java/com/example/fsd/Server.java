@@ -75,25 +75,25 @@ public class Server {
     }
 
     public static String generateSignature(String message) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-            try {
-                // Crie um objeto de assinatura com o algoritmo SHA256withRSA
-                Signature signature = Signature.getInstance("SHA256withRSA");
+        try {
+            // Crie um objeto de assinatura com o algoritmo SHA256withRSA
+            Signature signature = Signature.getInstance("SHA256withRSA");
 
-                // Inicialize o objeto de assinatura com a chave privada
-                signature.initSign(privateKey);
+            // Inicialize o objeto de assinatura com a chave privada
+            signature.initSign(privateKey);
 
-                // Atualize o objeto de assinatura com os bytes da mensagem
-                signature.update(message.getBytes("UTF-8"));
+            // Atualize o objeto de assinatura com os bytes da mensagem
+            signature.update(message.getBytes("UTF-8"));
 
-                // Assine os dados e obtenha a assinatura
-                byte[] digitalSignature = signature.sign();
+            // Assine os dados e obtenha a assinatura
+            byte[] digitalSignature = signature.sign();
 
-                // Codifique a assinatura em base64 e retorne
-                return Base64.getEncoder().encodeToString(digitalSignature);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            // Codifique a assinatura em base64 e retorne
+            return Base64.getEncoder().encodeToString(digitalSignature);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-
     }
+
+}

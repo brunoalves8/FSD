@@ -187,10 +187,10 @@ public class ClientRMI {
                 System.err.println("Formato inválido da mensagem recebida.");
             }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("Erro ao adicionar produto via RMI: " + e.getMessage());
-            }
+        }
     }
 
     public  void removeProductRMI(String productId, int quantity) {
@@ -265,9 +265,9 @@ public class ClientRMI {
                     String productIdToAdd = null;
                     Integer qtdToAdd = null;
                     while(verified == false){
-                    productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
-                    qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
-                    verified = rmiClient.verifyIfExistsProductID("stock88.csv",productIdToAdd);
+                        productIdToAdd = readString("Qual o id do produto que pretende adicionar?");
+                        qtdToAdd = readInteger("Quantas unidades pretende adicionar desse produto?");
+                        verified = rmiClient.verifyIfExistsProductID("stock88.csv",productIdToAdd);
                         if(verified == false){
                             System.err.println("ID inválido. Tente novamente");
                         }
