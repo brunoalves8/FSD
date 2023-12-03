@@ -200,7 +200,7 @@ public class Client {
                         // Verificar a assinatura
                         if (processSignedMessage(receivedMessage, receivedSignature, serverPublicKey)) {
                             // Assinatura verificada com sucesso
-                            System.out.println("Mensagem recebida e assinatura verificada com sucesso!");
+                            System.out.println("Mensagem recebida e assinatura verificada com sucesso.");
 
                             String[] receivedProducts = receivedMessage.split(",");
 
