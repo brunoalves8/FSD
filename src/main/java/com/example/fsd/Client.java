@@ -346,6 +346,7 @@ public class Client {
                     client.updateStock("REMOVE", productID, qtd);
                     //Remover as próximas três linhas se for preciso ou adicionar
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
+
                     try {
                         // Especifique o endereço IP e a porta do servidor RMI
                         String servidorIP = client.serverAddress; // Substitua pelo IP do servidor
