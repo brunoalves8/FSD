@@ -13,7 +13,6 @@ import java.rmi.registry.Registry;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.sql.SQLOutput;
 import java.util.*;
 
 public class Client {
@@ -300,14 +299,13 @@ public class Client {
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
 
                     try {
-                        // Especifique o endereço IP e a porta do servidor RMI
-                        String servidorIP = client.serverAddress; // Substitua pelo IP do servidor
-                        int porta = 1099; // Porta padrão para o registro RMI
 
-                        // Conecte-se ao registro RMI no servidor
-                        Registry registry = LocateRegistry.getRegistry(servidorIP, porta);
+                        int porta = 1099;
 
-                        // Agora você pode procurar os objetos remotos registrados no servidor
+
+                        Registry registry = LocateRegistry.getRegistry(client.serverAddress, porta);
+
+
                         StockServer stub = (StockServer) registry.lookup("StockServer");
 
                         stub.notifyClients(notificationMessage);
@@ -344,18 +342,18 @@ public class Client {
                 // Se o ID foi encontrado e há unidades suficientes em stock para remover
                 if (qtd > 0 && currentQuantity >= qtd) {
                     client.updateStock("REMOVE", productID, qtd);
-                    //Remover as próximas três linhas se for preciso ou adicionar
+
                     String notificationMessage = "Produto (ID:" + productID + ") foi atualizado.";
 
                     try {
-                        // Especifique o endereço IP e a porta do servidor RMI
-                        String servidorIP = client.serverAddress; // Substitua pelo IP do servidor
-                        int porta = 1099; // Porta padrão para o registro RMI
 
-                        // Conecte-se ao registro RMI no servidor
+                        String servidorIP = client.serverAddress;
+                        int porta = 1099;
+
+
                         Registry registry = LocateRegistry.getRegistry(servidorIP, porta);
 
-                        // Agora você pode procurar os objetos remotos registrados no servidor
+
                         StockServer stub = (StockServer) registry.lookup("StockServer");
 
                         stub.notifyClients(notificationMessage);
